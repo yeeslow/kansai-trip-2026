@@ -1,0 +1,2487 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>2026 Kansai | 京阪神春遊</title>
+    
+    <!-- PWA / Mobile Optimization -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#F9F8F6">
+    <link rel="apple-touch-icon" href="https://api.dicebear.com/9.x/notionists/svg?seed=KansaiApp&backgroundColor=b45d4f">
+
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700;900&family=Noto+Serif+JP:wght@400;600;900&display=swap" rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        'kansai-bg': 'var(--color-bg)',
+                        'kansai-card': '#FFFFFF',
+                        'kansai-text': 'var(--color-text)',
+                        'kansai-red': 'var(--color-primary)',
+                        'kansai-green': 'var(--color-secondary)',
+                        'kansai-accent': 'var(--color-accent)',
+                        'kansai-light': 'var(--color-light)'
+                    },
+                    fontFamily: {
+                        sans: ['"Noto Sans TC"', 'sans-serif'],
+                        serif: ['"Noto Serif JP"', 'serif'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        :root {
+            /* Default: Kyoto */
+            --color-bg: #F9F8F6;
+            --color-text: #2C2C29;
+            --color-primary: #B45D4F;  
+            --color-secondary: #7C8C64; 
+            --color-accent: #6E6E6A;
+            --color-light: #EFECE4;
+            --color-gradient-to: #E09F3E;
+        }
+
+        body {
+            font-family: 'Noto Sans TC', sans-serif;
+            background-color: var(--color-bg);
+            color: var(--color-text);
+            overflow-x: hidden;
+            -webkit-tap-highlight-color: transparent;
+            background-image: radial-gradient(#D4D4D4 1px, transparent 1px);
+            background-size: 16px 16px;
+            background-attachment: fixed;
+            transition: background-color 0.5s ease, color 0.5s ease;
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .app-card {
+            background-color: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+            border: 1px solid rgba(0,0,0,0.06);
+            transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s;
+        }
+
+        .nav-tab {
+            position: relative;
+            color: var(--color-accent);
+            font-weight: 600;
+            padding-bottom: 6px;
+            font-size: 0.75rem;
+            transition: color 0.3s;
+            font-family: 'Noto Serif JP', serif;
+            letter-spacing: 0.05em;
+        }
+        .nav-tab.active {
+            color: var(--color-primary);
+            font-weight: 900;
+        }
+        .nav-tab.active::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 20px;
+            height: 2px;
+            background-color: var(--color-primary);
+            border-radius: 99px;
+        }
+
+        .sub-tab-container {
+            background-color: var(--color-light);
+            padding: 3px;
+            border-radius: 999px;
+            display: inline-flex;
+            position: relative;
+            box-shadow: inset 0 1px 3px rgba(0,0,0,0.04);
+        }
+        
+        .sub-tab-btn {
+            padding: 6px 14px; 
+            margin: 0;
+            box-shadow: none;
+            border: none;
+            background-color: transparent;
+            color: var(--color-accent);
+            font-size: 0.7rem;
+            font-weight: 700;
+            border-radius: 999px;
+            transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+        
+        .sub-tab-btn.active {
+            background-color: white;
+            color: var(--color-primary);
+            box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+            transform: none;
+        }
+        
+        .sub-tab-btn.inactive:hover {
+            color: var(--color-text);
+            background-color: rgba(255,255,255,0.5);
+        }
+
+        .input-underline {
+            background: transparent;
+            border-bottom: 2px solid var(--color-light);
+            border-radius: 0;
+            padding: 2px 0;
+            font-size: 1.2rem;
+            font-weight: 500;
+            width: 100%;
+            outline: none;
+            color: var(--color-text);
+            -moz-appearance: textfield;
+            font-family: 'Noto Serif JP', serif;
+        }
+        .input-underline:focus {
+            border-color: var(--color-primary);
+        }
+
+        .dashed-upload {
+            border: 2px dashed #D0D0D0;
+            border-radius: 10px;
+            background-color: #FAFAFA;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 120px;
+            color: var(--color-accent);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .dashed-upload:hover {
+            border-color: var(--color-primary);
+            background-color: #FEFBFB;
+        }
+
+        .timeline-line {
+            position: absolute;
+            left: 14px;
+            top: 16px;
+            bottom: 0;
+            width: 2px;
+            background-color: #E0E0E0;
+            z-index: 0;
+            border-left: 2px dashed #C0C0C0; 
+            background-color: transparent;
+        }
+        .timeline-dot {
+            width: 8px;
+            height: 8px;
+            background-color: var(--color-bg);
+            border: 2px solid #C0C0C0;
+            border-radius: 50%;
+            position: absolute;
+            left: 11px;
+            top: 20px;
+            z-index: 10;
+        }
+          
+        .view-section {
+            display: none;
+            animation: fadeIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .view-section.active {
+            display: block;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(8px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .booking-sub-section, .todo-sub-section {
+            display: none;
+            animation: fadeIn 0.3s ease-out;
+        }
+        .booking-sub-section.active, .todo-sub-section.active {
+            display: block;
+        }
+
+        .custom-checkbox input:checked + div, .card-checkbox input:checked + div {
+            background-color: var(--color-primary);
+            border-color: var(--color-primary);
+        }
+        .custom-checkbox input:checked + div i {
+            opacity: 1;
+        }
+        
+        .sticky-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid rgba(0,0,0,0.05);
+            transition: background-color 0.5s ease;
+        }
+
+        /* Modal */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 100;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+            backdrop-filter: blur(4px);
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-content {
+            background: var(--color-bg);
+            width: 85%;
+            max-width: 320px;
+            border-radius: 20px;
+            padding: 20px;
+            transform: scale(0.9);
+            transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+            box-shadow: 0 20px 40px -12px rgba(0, 0, 0, 0.2);
+            position: relative;
+            max-height: 85vh;
+            overflow-y: auto;
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+            border: 1px solid white;
+        }
+        .modal-content::-webkit-scrollbar {
+            display: none;
+        }
+        .modal-overlay.active .modal-content {
+            transform: scale(1);
+        }
+        
+        .typing-indicator span {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            background-color: var(--color-primary);
+            border-radius: 50%;
+            animation: typing 1.4s infinite ease-in-out both;
+            margin: 0 2px;
+        }
+        .typing-indicator span:nth-child(1) { animation-delay: -0.32s; }
+        .typing-indicator span:nth-child(2) { animation-delay: -0.16s; }
+        @keyframes typing {
+            0%, 80%, 100% { transform: scale(0); }
+            40% { transform: scale(1); }
+        }
+
+        .luggage-tag {
+            font-size: 10px;
+            padding: 2px 8px;
+            border-radius: 4px;
+            margin-left: 6px;
+            display: inline-flex;
+            align-items: center;
+            gap: 3px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+            line-height: 1.4;
+            height: 20px;
+            transition: all 0.2s;
+        }
+
+        .luggage-storage-option.selected {
+            border-color: var(--color-primary);
+            background-color: var(--color-bg); 
+        }
+        .luggage-storage-option.selected .icon-box {
+            background-color: var(--color-primary);
+            color: white;
+        }
+        .luggage-tag-option.selected {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+            transform: translateY(-1px);
+            font-weight: 700;
+        }
+        .voucher-type-option.selected {
+            border-color: var(--color-primary);
+            background-color: var(--color-light); 
+            color: var(--color-primary);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+            transform: translateY(-1px);
+        }
+        .voucher-type-option.selected i {
+            color: var(--color-primary);
+        }
+        
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        .shake {
+            animation: shake 0.3s ease-in-out;
+            border-color: var(--color-primary) !important;
+        }
+
+        .toast {
+            position: fixed;
+            bottom: 70px;
+            left: 50%;
+            transform: translateX(-50%) translateY(20px);
+            background: var(--color-text);
+            color: white;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            opacity: 0;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            z-index: 1000;
+            pointer-events: none;
+            white-space: nowrap;
+            box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            letter-spacing: 0.05em;
+        }
+        .toast.active {
+            transform: translateX(-50%) translateY(0);
+            opacity: 1;
+        }
+        
+        .boarding-pass {
+            background-color: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.06);
+            position: relative;
+            border: 1px solid rgba(0,0,0,0.06);
+        }
+
+        .theme-option:hover { background-color: var(--color-light); }
+        .theme-option.active { border-color: var(--color-primary); background-color: var(--color-light); }
+
+        .voice-wave {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 3px;
+            height: 20px;
+        }
+        .voice-wave div {
+            background: var(--color-primary);
+            width: 3px;
+            height: 100%;
+            border-radius: 2px;
+            animation: wave 1s infinite ease-in-out;
+        }
+        .voice-wave div:nth-child(2) { animation-delay: 0.1s; }
+        .voice-wave div:nth-child(3) { animation-delay: 0.2s; }
+        .voice-wave div:nth-child(4) { animation-delay: 0.3s; }
+        .voice-wave div:nth-child(5) { animation-delay: 0.4s; }
+        @keyframes wave {
+            0%, 100% { height: 20%; }
+            50% { height: 100%; }
+        }
+        
+        /* New AI Button Pulse */
+        @keyframes subtle-pulse {
+            0%, 100% { box-shadow: 0 0 0 0 rgba(180, 93, 79, 0.4); }
+            50% { box-shadow: 0 0 0 4px rgba(180, 93, 79, 0.1); }
+        }
+        .ai-sparkle-btn {
+            animation: subtle-pulse 3s infinite;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Toast -->
+    <div id="toast" class="toast">
+        <i class="fa-solid fa-circle-info text-white"></i>
+        <span id="toast-msg">Notification</span>
+    </div>
+
+    <!-- Modal -->
+    <div id="ai-modal" class="modal-overlay">
+        <div class="modal-content">
+            <button onclick="closeModal()" class="absolute top-4 right-4 w-6 h-6 flex items-center justify-center rounded-full bg-gray-100 text-gray-400 hover:bg-gray-200 transition-colors z-10">
+                <i class="fa-solid fa-times text-xs"></i>
+            </button>
+            <div class="flex flex-col items-center mb-4">
+                <div id="modal-icon-container" class="w-12 h-12 rounded-2xl bg-white flex items-center justify-center text-kansai-red text-2xl mb-2 shadow-md border border-kansai-light">
+                    <i id="modal-icon" class="fa-solid fa-wand-magic-sparkles"></i>
+                </div>
+                <h3 id="modal-title" class="font-black text-lg text-kansai-text tracking-widest font-serif">AI Assistant</h3>
+            </div>
+            <div id="modal-body" class="mb-4 text-xs text-gray-600 leading-relaxed min-h-[20px]"></div>
+            <div id="modal-input-area" class="hidden mb-4">
+                <textarea id="translate-input" class="w-full bg-[#FAFAFA] rounded-xl p-3 text-gray-700 text-sm border-2 border-kansai-light focus:border-kansai-red focus:outline-none resize-none hidden" rows="3" placeholder="請輸入..."></textarea>
+                <input type="number" id="modal-number-input" class="w-full bg-[#FAFAFA] rounded-xl p-3 text-gray-700 text-lg font-serif border-2 border-kansai-light focus:border-kansai-red focus:outline-none text-center hidden" placeholder="例如: 5500">
+                <div id="voucher-upload-container" class="hidden">
+                    <label class="w-full h-20 border-2 border-dashed border-kansai-light rounded-xl bg-[#FAFAFA] flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-colors relative overflow-hidden">
+                        <div id="voucher-preview-area" class="absolute inset-0 z-0"></div>
+                        <div class="z-10 flex flex-col items-center">
+                            <i class="fa-solid fa-cloud-arrow-up text-xl text-kansai-accent mb-1"></i>
+                            <span id="voucher-upload-text" class="text-xs text-kansai-accent font-bold">點擊上傳 PDF 或圖片</span>
+                        </div>
+                        <input type="file" id="voucher-file" class="hidden" accept="image/*,.pdf" onchange="previewVoucherFile(this)">
+                    </label>
+                </div>
+            </div>
+            <div id="modal-loading" class="hidden flex flex-col items-center justify-center py-4">
+                <div class="typing-indicator mb-2"><span></span><span></span><span></span></div>
+                <p class="text-xs text-gray-400 font-serif font-bold">Gemini 正在思考中...</p>
+            </div>
+            <div id="audio-wave" class="hidden flex justify-center py-2 mb-2">
+                <div class="voice-wave"><div></div><div></div><div></div><div></div><div></div></div>
+            </div>
+            <div id="modal-actions" class="flex gap-2 justify-center"></div>
+        </div>
+    </div>
+
+    <!-- Header -->
+    <div class="sticky top-0 z-50 sticky-header max-w-md mx-auto w-full pt-4 pb-2 px-4 overflow-hidden">
+        
+        <div class="flex justify-between items-start mb-4 relative z-10">
+            <div class="flex flex-col">
+                <div class="flex items-center gap-1.5">
+                    <h1 class="font-black text-2xl tracking-widest text-kansai-text font-serif leading-none">KANSAI</h1>
+                    <div class="bg-kansai-red text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-sm">2026</div>
+                </div>
+                <div class="flex items-center gap-1.5 mt-1 text-[9px] font-bold text-gray-400 tracking-wider uppercase">
+                    <span class="text-kansai-green">Spring Trip</span>
+                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span>Kyoto</span>
+                    <span class="w-1 h-1 rounded-full bg-gray-300"></span>
+                    <span>Osaka</span>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-2">
+                <!-- Save Status (Mini) -->
+                <div id="save-status-badge" class="h-8 px-2.5 rounded-full bg-white/60 backdrop-blur-md border border-white/50 flex items-center gap-1.5 shadow-sm transition-all">
+                    <div class="w-1.5 h-1.5 rounded-full bg-kansai-green animate-pulse"></div>
+                    <span class="text-[9px] font-bold text-gray-500">已儲存</span>
+                </div>
+
+                <!-- Theme Toggle -->
+                <button onclick="openThemeModal()" class="w-9 h-9 rounded-full bg-white/80 backdrop-blur-md flex items-center justify-center text-kansai-accent border border-white/50 shadow-sm hover:scale-105 transition-all">
+                    <i class="fa-solid fa-palette text-xs"></i>
+                </button>
+                
+                <!-- User Avatar -->
+                <button onclick="toggleCurrentUser()" class="relative focus:outline-none group active:scale-95 transition-transform">
+                      <div class="w-9 h-9 rounded-full bg-gray-100 overflow-hidden ring-2 ring-white shadow-md border border-gray-100">
+                        <img id="header-user-avatar" src="https://api.dicebear.com/9.x/notionists/svg?seed=Jessica&backgroundType[]&beardProbability=0&body=variant24&bodyIcon[]&bodyIconProbability=0&brows=variant09&gesture[]&gestureProbability=0&glasses[]&glassesProbability=0&hair=variant28&lips=variant14&nose=variant06" alt="User" class="w-full h-full object-cover">
+                      </div>
+                </button>
+            </div>
+        </div>
+
+        <div class="flex justify-between items-center px-1 border-b border-gray-200/50 pb-0 relative z-10">
+            <button onclick="switchView('home')" class="nav-tab active text-xs pb-2" id="tab-home">首頁</button>
+            <button onclick="switchView('schedule')" class="nav-tab text-xs pb-2" id="tab-schedule">行程</button>
+            <button onclick="switchView('booking')" class="nav-tab text-xs pb-2" id="tab-booking">預定</button>
+            <button onclick="switchView('todo')" class="nav-tab text-xs pb-2" id="tab-todo">準備</button>
+            <button onclick="switchView('checklist')" class="nav-tab text-xs pb-2" id="tab-checklist">行李</button>
+        </div>
+    </div>
+
+    <div class="max-w-md mx-auto min-h-screen px-4 pb-20 pt-4">
+
+        <!-- VIEW 1: Home -->
+        <div id="view-home" class="view-section active space-y-4">
+            <!-- Countdown -->
+            <div class="app-card p-4 relative overflow-hidden bg-gradient-to-br from-kansai-red to-kansai-accent text-white border-none shadow-md">
+                <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=\'20\' height=\'20\' viewBox=\'0 0 20 20\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cpath d=\'M1 1h2v2H1V1zm4 0h2v2H5V1zm4 0h2v2H9V1zm4 0h2v2h-2V1zm4 0h2v2h-2V1zM1 5h2v2H1V5zm4 0h2v2H5V5zm4 0h2v2H9V5zm4 0h2v2h-2V5zm4 0h2v2h-2V5zM1 9h2v2H1V9zm4 0h2v2H5V9zm4 0h2v2H9V9zm4 0h2v2h-2V9zm4 0h2v2h-2V9zM1 13h2v2H1v-2zm4 0h2v2H5v-2zm4 0h2v2H9v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2zM1 17h2v2H1v-2zm4 0h2v2H5v-2zm4 0h2v2H9v-2zm4 0h2v2h-2v-2zm4 0h2v2h-2v-2z\' fill=\'%23ffffff\' fill-opacity=\'0.4\' fill-rule=\'evenodd\'/%3E%3C/svg%3E');"></div>
+                <div class="absolute -right-6 -top-6 w-24 h-24 bg-white/10 rounded-full opacity-30 blur-2xl transition-colors duration-500"></div>
+                <div class="flex items-center justify-between relative z-10">
+                    <div class="flex flex-col justify-center">
+                        <div class="flex items-center gap-1.5 mb-1.5 opacity-90">
+                            <span class="text-[10px] tracking-[0.2em] font-serif border-b border-white/40 pb-0.5 font-bold">旅立ちまで</span>
+                        </div>
+                        <div class="flex items-center gap-1.5 text-xs bg-white/10 px-3 py-1 rounded-full backdrop-blur-md w-fit border border-white/10 shadow-sm">
+                            <i class="fa-regular fa-calendar opacity-80 text-[10px]"></i>
+                            <span class="font-serif tracking-widest font-bold">2026.04.09</span>
+                        </div>
+                    </div>
+                    <div class="flex items-end gap-1">
+                        <span class="text-4xl font-light font-serif leading-none tracking-tighter" id="cd-days">00</span>
+                        <div class="flex flex-col justify-end pb-1 text-right">
+                            <span class="text-[9px] font-black opacity-60 tracking-widest">DAYS</span>
+                            <span class="text-[9px] font-black opacity-60 tracking-widest">LEFT</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+             <!-- Exchange Rate -->
+            <div class="app-card p-4 relative overflow-hidden">
+                <div class="flex items-center gap-2 mb-2">
+                    <div class="w-1 h-3 bg-kansai-red rounded-sm transition-colors duration-500"></div>
+                    <h3 class="font-black text-sm text-kansai-text font-serif tracking-wide">匯率試算</h3>
+                </div>
+                <div class="flex justify-between items-center mb-1 px-1">
+                    <span class="text-[10px] text-kansai-accent font-black tracking-widest">JPY</span>
+                    <span class="text-[10px] text-kansai-accent font-black tracking-widest">TWD</span>
+                </div>
+                <div class="flex items-center justify-between gap-3 mb-2">
+                    <input type="number" value="1000" class="input-underline text-3xl font-light font-serif" id="jpy-input" oninput="calcRate()">
+                    <span class="text-xl text-gray-300 font-light font-serif">=</span>
+                    <input type="number" class="input-underline text-3xl font-light font-serif text-right" id="twd-output" value="218" oninput="calcReverse()">
+                </div>
+                <div class="flex justify-between items-center mt-1 px-1">
+                    <span id="rate-display" class="text-[10px] text-gray-500 bg-gray-100 px-2 py-0.5 rounded font-bold">匯率載入中...</span>
+                    <span class="text-[10px] text-gray-400 font-serif font-bold">即時匯率</span>
+                </div>
+            </div>
+
+            <div class="app-card p-4">
+                <div class="flex items-center gap-2 mb-3">
+                    <i class="fa-solid fa-qrcode text-kansai-text text-base"></i>
+                    <h3 class="font-black text-sm text-kansai-text font-serif tracking-wide">Visit Japan Web</h3>
+                    <div class="ml-auto flex gap-2">
+                         <button id="vjw-btn-1" onclick="switchVjwUser(1)" class="text-[10px] px-3 py-1 rounded transition-all duration-200 bg-kansai-red text-white font-bold shadow-sm">釔辰</button>
+                         <button id="vjw-btn-2" onclick="switchVjwUser(2)" class="text-[10px] px-3 py-1 rounded transition-all duration-200 bg-gray-100 text-gray-500 hover:bg-gray-200 font-bold">耀慶</button>
+                    </div>
+                </div>
+                <div class="dashed-upload mb-3 relative overflow-hidden group hover:border-kansai-red transition-colors" onclick="document.getElementById('file-upload').click()">
+                    <div class="z-10 flex flex-col items-center pointer-events-none">
+                        <i class="fa-solid fa-plus text-xl mb-1 text-gray-300 group-hover:text-kansai-red transition-colors"></i>
+                        <span class="text-xs font-bold text-gray-400 group-hover:text-kansai-red">上傳 QR Code</span>
+                    </div>
+                    <input type="file" id="file-upload" class="hidden" accept="image/*" onchange="showToast('模擬上傳成功！')">
+                </div>
+                <button onclick="window.open('https://vjw-lp.digital.go.jp/zh-hant/', '_blank')" class="w-full bg-[#FAFAFA] text-kansai-red border-2 border-kansai-red/10 py-2.5 rounded-xl text-xs font-bold flex items-center justify-center gap-2 hover:bg-kansai-light transition-all active:scale-95 shadow-sm">
+                    開啟 VJW 官網 <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+                </button>
+            </div>
+
+            <div class="grid grid-cols-3 gap-3">
+                <div class="app-card p-2 flex flex-col items-center justify-center gap-1 h-20 active:scale-95 transition-transform cursor-pointer hover:border-kansai-green group" onclick="openTranslatorModal()">
+                    <i class="fa-solid fa-language text-xl text-kansai-green group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[10px] font-bold text-gray-600">簡單日語</span>
+                </div>
+                <div class="app-card p-2 flex flex-col items-center justify-center gap-1 h-20 active:scale-95 transition-transform cursor-pointer hover:border-kansai-red group" onclick="openNotesModal()">
+                    <i class="fa-solid fa-clipboard-list text-xl text-kansai-red group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[10px] font-bold text-gray-600">注意事項</span>
+                </div>
+                <div class="app-card p-2 flex-1 flex flex-col items-center justify-center gap-1 h-20 active:scale-95 transition-transform cursor-pointer hover:border-red-400 group" onclick="openEmergencyModal()">
+                    <i class="fa-solid fa-bell text-xl text-red-400 group-hover:scale-110 transition-transform"></i>
+                    <span class="text-[10px] font-bold text-gray-600">緊急聯絡</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- VIEW 2: Schedule -->
+        <div id="view-schedule" class="view-section">
+            <div class="flex items-center justify-between px-1 mb-3 pt-1">
+                <div class="flex items-center gap-2">
+                    <span class="w-1 h-3 bg-kansai-text rounded-full"></span>
+                    <span class="text-sm font-black text-kansai-text tracking-wide font-serif">行程表</span>
+                </div>
+                <div class="flex items-center gap-2">
+                    <span class="text-[10px] bg-kansai-text text-white px-2.5 py-1 rounded-lg font-bold shadow-md flex items-center border border-white/20">
+                        <i class="fa-solid fa-location-dot mr-1 text-[9px] text-kansai-red"></i>
+                        <span id="current-location-text">移動/京都</span>
+                    </span>
+                </div>
+            </div>
+            <div id="schedule-dates-container" class="flex overflow-x-auto hide-scrollbar gap-2 mb-4 sticky top-0 pt-2 pb-2 bg-kansai-bg z-20 px-1 transition-colors duration-500"></div>
+            <div class="relative pl-5 space-y-4" id="schedule-timeline-container">
+                <div class="timeline-line"></div>
+                <div id="schedule-items-list"></div>
+            </div>
+            <button onclick="openScheduleModal('add')" class="fixed bottom-20 right-5 w-14 h-14 bg-kansai-text text-white rounded-full shadow-2xl flex items-center justify-center text-xl active:scale-90 transition-transform z-30 hover:bg-black border-2 border-white/20">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- VIEW 3: Booking -->
+        <div id="view-booking" class="view-section">
+            <div class="flex justify-center mb-5">
+                <div class="sub-tab-container">
+                    <button onclick="switchBookingTab('flight')" id="subtab-flight" class="sub-tab-btn active"><i class="fa-solid fa-plane text-[10px]"></i> 機票</button>
+                    <button onclick="switchBookingTab('hotel')" id="subtab-hotel" class="sub-tab-btn inactive"><i class="fa-solid fa-hotel text-[10px]"></i> 住宿</button>
+                    <button onclick="switchBookingTab('voucher')" id="subtab-voucher" class="sub-tab-btn inactive"><i class="fa-solid fa-ticket text-[10px]"></i> 憑證</button>
+                </div>
+            </div>
+            <div id="booking-flight" class="booking-sub-section active space-y-4">
+                <div id="flight-list" class="space-y-4"></div>
+            </div>
+            <div id="booking-hotel" class="booking-sub-section">
+                <div id="hotel-list" class="space-y-4"></div>
+                <button class="w-full py-4 border-2 border-dashed border-kansai-light rounded-xl text-kansai-accent text-xs font-bold hover:bg-white hover:border-kansai-red hover:text-kansai-red transition-all flex items-center justify-center gap-2 mt-4">
+                    <i class="fa-solid fa-plus"></i> 新增住宿
+                </button>
+            </div>
+            <div id="booking-voucher" class="booking-sub-section">
+                <div class="grid grid-cols-2 gap-3" id="voucher-list"></div>
+                <button onclick="openVoucherModal('add')" class="fixed bottom-20 right-5 w-12 h-12 bg-white text-kansai-red rounded-full shadow-xl flex items-center justify-center text-xl active:scale-90 transition-transform z-30 border-2 border-kansai-red/10">
+                    <i class="fa-solid fa-plus"></i>
+                </button>
+            </div>
+        </div>
+
+        <!-- VIEW 4: Todo -->
+        <div id="view-todo" class="view-section">
+            <div class="flex justify-center mb-6">
+                <div class="sub-tab-container">
+                    <button onclick="switchTodoTab('general')" id="subtab-todo-general" class="sub-tab-btn active"><i class="fa-solid fa-list-check text-xs"></i> 待辦</button>
+                    <button onclick="switchTodoTab('shopping')" id="subtab-todo-shopping" class="sub-tab-btn inactive"><i class="fa-solid fa-cart-shopping text-xs"></i> 採購</button>
+                    <button onclick="switchTodoTab('wishlist')" id="subtab-todo-wishlist" class="sub-tab-btn inactive"><i class="fa-solid fa-heart text-xs"></i> 備案</button>
+                </div>
+            </div>
+            <div id="todo-general" class="todo-sub-section active space-y-3">
+                <div class="flex bg-white p-1 rounded-xl mx-4 mb-4 shadow-sm border border-gray-100">
+                    <button id="todo-view-user-1" onclick="switchTodoAssignee('釔辰')" class="flex-1 py-1.5 text-xs text-gray-400 hover:bg-gray-50 transition-all font-serif font-bold rounded-lg">釔辰</button>
+                    <button id="todo-view-user-2" onclick="switchTodoAssignee('耀慶')" class="flex-1 py-1.5 text-xs text-gray-400 hover:bg-gray-50 transition-all font-serif font-bold rounded-lg">耀慶</button>
+                    <button id="todo-view-user-3" onclick="switchTodoAssignee('共同')" class="flex-1 py-1.5 text-xs font-bold text-gray-700 bg-kansai-bg rounded-lg transition-all font-serif">共同</button>
+                </div>
+                <div id="general-list-container" class="space-y-3"></div>
+            </div>
+            <div id="todo-shopping" class="todo-sub-section space-y-3">
+                <div class="flex bg-white p-1 rounded-xl mx-4 mb-4 shadow-sm border border-gray-100">
+                    <button id="shopping-view-user-1" onclick="switchShoppingUser('釔辰')" class="flex-1 py-1.5 text-xs font-bold text-gray-700 bg-kansai-bg rounded-lg transition-all font-serif">釔辰</button>
+                    <button id="shopping-view-user-2" onclick="switchShoppingUser('耀慶')" class="flex-1 py-1.5 text-xs text-gray-400 hover:bg-gray-50 transition-all font-serif font-bold rounded-lg">耀慶</button>
+                </div>
+                <div id="shopping-list-container" class="space-y-3"></div>
+            </div>
+            <div id="todo-wishlist" class="todo-sub-section space-y-3"></div>
+            <button id="add-todo-btn" onclick="openTodoModal()" class="fixed bottom-20 right-5 w-12 h-12 bg-white text-kansai-red rounded-full shadow-xl flex items-center justify-center text-xl active:scale-90 transition-transform z-30 border-2 border-kansai-red/10">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+        <!-- VIEW 5: Checklist -->
+        <div id="view-checklist" class="view-section">
+            <div class="flex flex-col items-center py-6">
+                <div class="w-full px-8">
+                    <div class="flex justify-between text-[10px] text-gray-400 mb-2 font-bold tracking-widest">
+                        <span>準備進度</span>
+                        <span id="progress-text">0%</span>
+                    </div>
+                    <div class="w-full h-[8px] bg-gray-200 rounded-full overflow-hidden">
+                        <!-- 修改：移除固定的 class，改用 inline style 引用 CSS 變數，實現動態漸層 -->
+                        <div id="progress-bar" class="h-full w-0 transition-all duration-500 ease-out shadow-sm" style="background: linear-gradient(90deg, var(--color-primary), var(--color-gradient-to));"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="flex bg-white p-1 rounded-xl mx-4 mb-4 shadow-sm border border-gray-100">
+                <button id="luggage-view-user-1" onclick="switchLuggageView('釔辰')" class="flex-1 py-1.5 text-xs font-bold text-gray-700 bg-kansai-bg rounded-lg transition-all font-serif">釔辰</button>
+                <button id="luggage-view-user-2" onclick="switchLuggageView('耀慶')" class="flex-1 py-1.5 text-xs text-gray-400 hover:bg-gray-50 transition-all font-serif font-bold rounded-lg">耀慶</button>
+            </div>
+            
+            <!-- 修改：將原本只有排序按鈕的區塊，改為包含重置按鈕的 Flex 佈局 -->
+            <div class="flex items-center justify-between px-4 mb-2">
+                <!-- 新增：重置按鈕 (預設隱藏，由 JS 控制顯示) -->
+                <button id="reset-luggage-btn" onclick="askResetLuggage()" class="w-8 h-8 rounded-full bg-white border border-gray-200 text-gray-400 hover:text-red-500 hover:border-red-200 hover:bg-red-50 transition-all flex items-center justify-center shadow-sm active:scale-95 hidden" aria-label="重置清單">
+                    <i class="fa-solid fa-rotate-left text-xs"></i>
+                </button>
+
+                <!-- 排序按鈕 (靠右對齊) -->
+                <div class="flex gap-2 ml-auto">
+                    <button onclick="setLuggageSort('default')" id="sort-default" class="text-[10px] px-3 py-1 rounded-lg bg-kansai-light text-kansai-text font-bold transition-all">清單</button>
+                    <button onclick="setLuggageSort('storage')" id="sort-storage" class="text-[10px] px-3 py-1 rounded-lg bg-white border border-gray-200 text-gray-400 transition-all">位置</button>
+                    <button onclick="setLuggageSort('tag')" id="sort-tag" class="text-[10px] px-3 py-1 rounded-lg bg-white border border-gray-200 text-gray-400 transition-all">標籤</button>
+                </div>
+            </div>
+
+            <div class="space-y-2.5 pb-20" id="luggage-list"></div>
+            <button id="add-luggage-btn" onclick="openLuggageModal('add')" class="fixed bottom-6 right-5 w-14 h-14 bg-kansai-text text-white rounded-full shadow-2xl flex items-center justify-center text-xl active:scale-90 transition-transform z-30 hover:bg-black border-2 border-white/20">
+                <i class="fa-solid fa-plus"></i>
+            </button>
+        </div>
+
+    </div>
+
+    <script>
+        // *** API Key 設定 ***
+        // 若在本地執行，請填入您的 Gemini API Key。
+        // 若在 Canvas 環境執行，請保持為空字串，系統會自動處理。
+        let apiKey = localStorage.getItem("my_gemini_key");
+
+if (!apiKey) {
+    // 第一次使用，跳出視窗詢問
+    apiKey = prompt("請輸入您的 Google Gemini API Key (只會詢問一次):");
+    if (apiKey) {
+        // 存入手機，下次不用再問
+        localStorage.setItem("my_gemini_key", apiKey.trim());
+        alert("Key 已儲存！請重新整理頁面。");
+        location.reload(); // 自動重整讓設定生效
+    } else {
+        alert("未輸入 Key，AI 功能將僅顯示模擬回應。");
+    }
+}
+
+	const firebaseConfig = {
+    apiKey: "AIzaSyDDpmU2w_ge-SMCU1l2Fy9-sBuh_Z2nv90",
+  authDomain: "kainsai-2026.firebaseapp.com",
+  projectId: "kainsai-2026",
+  storageBucket: "kainsai-2026.firebasestorage.app",
+  messagingSenderId: "740552464848",
+  appId: "1:740552464848:web:7a0c40358942be086001d5"
+};
+
+// 初始化雲端
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
+
+// 雲端儲存功能
+async function saveToFirebase() {
+    updateSaveStatus('editing');
+    const dataToSave = {
+        todo: todoData,
+        luggage: luggageData,
+        voucher: voucherData,
+        notes: notesData,
+        emergency: emergencyData,
+        phrases: phrasesData,
+        schedule: scheduleItemsData,
+        userThemes: userThemes,
+        flight: flightData,
+        hotel: hotelData,
+        lastUpdated: new Date()
+    };
+    try {
+        await db.collection("kansai_v1").doc("main_record").set(dataToSave);
+        updateSaveStatus('saved');
+    } catch (e) {
+        console.error("同步失敗", e);
+    }
+}
+
+// 雲端讀取功能
+async function loadFromFirebase() {
+    try {
+        const doc = await db.collection("kansai_v1").doc("main_record").get();
+        if (doc.exists) {
+            const parsed = doc.data();
+            todoData = parsed.todo || todoData;
+            luggageData = parsed.luggage || luggageData;
+            voucherData = parsed.voucher || voucherData;
+            notesData = parsed.notes || notesData;
+            emergencyData = parsed.emergency || emergencyData;
+            phrasesData = parsed.phrases || phrasesData;
+            scheduleItemsData = parsed.schedule || scheduleItemsData;
+            userThemes = parsed.userThemes || userThemes;
+            flightData = parsed.flight || flightData;
+            hotelData = parsed.hotel || hotelData;
+            renderAllInitialViews(); 
+        }
+    } catch (e) { console.error("讀取失敗", e); }
+}
+
+function renderAllInitialViews() {
+    // 這裡會用到您原本定義的函數來畫出介面
+    applyTheme(userThemes[currentUser] || 'kyoto');
+    renderFlightList();
+    renderVoucherList();
+    renderHotelList();
+    renderScheduleDates();
+    renderScheduleTimeline();
+    renderLuggageList();
+    switchView('home');
+}
+
+// 將原本檔案中的舊儲存指令轉向雲端
+window.saveToLocal = saveToFirebase;
+window.loadFromLocal = loadFromFirebase;
+
+// 網頁一打開就跑雲端讀取
+window.onload = function() {
+    loadFromFirebase();
+    fetchExchangeRate();
+    setInterval(updateCountdown, 1000);
+};
+
+    // --- 1. 資料區 (所有的行李、緊急聯絡、翻譯都在這) ---
+    let currentJapaneseText = "";
+    let currentRate = 0.218; 
+    let currentUser = '釔辰'; 
+    let viewingUser = '釔辰';
+    let luggageSortType = 'default';
+    let saveTimeout;
+    let collapsedGroups = new Set();
+    let currentTheme = 'kyoto';
+    // 新增：儲存每個使用者的主題偏好
+    let userThemes = { '釔辰': 'kyoto', '耀慶': 'kyoto' }; 
+    let currentTodoTab = 'general';
+    let viewingShoppingUser = '釔辰';
+    let viewingShoppingStore = null;
+    let viewingTodoAssignee = '共同'; 
+    let currentEditingTodoId = null;
+    let currentEditingScheduleId = null; 
+    let deleteTarget = null; 
+    let currentScheduleDay = 1; 
+    let currentNoteType = null; 
+    let currentNoteId = null;
+
+    let emergencyData = [
+        { id: 1, title: "警察局 (急救)", content: "110" },
+        { id: 2, title: "火警/救護車", content: "119" },
+        { id: 3, title: "外交部領事事務局", content: "+886-2-2343-2888" }
+    ];
+
+        const themes = {
+            'kyoto': {
+                '--color-bg': '#F9F8F6',
+                '--color-text': '#2C2C29', 
+                '--color-primary': '#B45D4F',  
+                '--color-secondary': '#7C8C64', 
+                '--color-accent': '#6E6E6A', 
+                '--color-light': '#EFECE4',
+                '--color-gradient-to': '#E09F3E' // 京都：暖橘色漸層
+            },
+            'uji': {
+                '--color-bg': '#F4F6F0',        
+                '--color-text': '#1E2B1C',      
+                '--color-primary': '#556B2F',  
+                '--color-secondary': '#6D4C41', 
+                '--color-accent': '#5D6D55',
+                '--color-light': '#E4E8DE',
+                '--color-gradient-to': '#A3B18A' // 宇治：淺綠色漸層
+            },
+            'osaka': {
+                '--color-bg': '#FFFFFF',        
+                '--color-text': '#263238', 
+                '--color-primary': '#D84315', 
+                '--color-secondary': '#283593', 
+                '--color-accent': '#546E7A', 
+                '--color-light': '#ECEFF1',
+                '--color-gradient-to': '#FFB703' // 大阪：亮黃色漸層
+            },
+            'kobe': {
+                '--color-bg': '#F5F7FA',        
+                '--color-text': '#1A237E',      
+                '--color-primary': '#0D47A1',  
+                '--color-secondary': '#8D6E63', 
+                '--color-accent': '#546E7A',    
+                '--color-light': '#ECEFF1',
+                '--color-gradient-to': '#48CAE4' // 神戶：天藍色漸層
+            }
+        };
+
+        const modal = document.getElementById('ai-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const modalInputArea = document.getElementById('modal-input-area');
+        const modalActions = document.getElementById('modal-actions');
+        const modalLoading = document.getElementById('modal-loading');
+        const audioWave = document.getElementById('audio-wave');
+        const translateInput = document.getElementById('translate-input');
+        const modalNumberInput = document.getElementById('modal-number-input');
+        const modalIconContainer = document.getElementById('modal-icon-container');
+        const modalIcon = document.getElementById('modal-icon');
+
+        
+
+        const userPasswords = {
+            '釔辰': '0110',
+            '耀慶': '1010'
+        };
+        let pendingUser = null;
+        
+        const avatars = {
+            '釔辰': 'https://api.dicebear.com/9.x/notionists/svg?seed=Jessica&backgroundType[]&beardProbability=0&body=variant24&bodyIcon[]&bodyIconProbability=0&brows=variant09&gesture[]&gestureProbability=0&glasses[]&glassesProbability=0&hair=variant28&lips=variant14&nose=variant06',
+            '耀慶': 'https://api.dicebear.com/9.x/notionists/svg?seed=Eden&beard[]&beardProbability=0&body=variant08&bodyIcon[]&bodyIconProbability=0&brows=variant08&eyes=variant05&gesture[]&glasses[]&glassesProbability=0&hair=variant53&lips=variant17&nose=variant13'
+        };
+
+        // Data Structure Placeholders
+        let todoData = {
+            general: [
+                { id: 1, text: '購買旅遊平安險', checked: false, assignee: '共同' },
+                { id: 2, text: '申請漫遊或買網卡', checked: false, assignee: '釔辰' }
+            ],
+            wishlist: [
+                { id: 1, text: '清水寺', checked: false, note: '京都' },
+                { id: 2, text: '環球影城', checked: false, note: '大阪' }
+            ],
+            shopping: {
+                '釔辰': [
+                    { id: 1, text: 'New York Perfect Cheese', checked: false, store: '東京車站', note: '8入裝*3', img: null },
+                    { id: 2, text: 'EVE止痛藥', checked: false, store: '藥妝店', note: '藍色包裝', img: null }
+                ],
+                '耀慶': [
+                    { id: 3, text: '鋼彈模型', checked: false, store: 'Yodobashi', note: 'HG 1/144', img: null },
+                    { id: 4, text: 'Switch 遊戲片', checked: false, store: 'Bic Camera', note: '', img: null }
+                ]
+            }
+        };
+
+        const createCommonItems = () => [
+            { name: '護照', note: '效期6個月以上', storage: 'backpack', tag: '重要' },
+            { name: '錢包', note: '外匯、信用卡', storage: 'backpack', tag: '重要' },
+            { name: '網卡', note: '確認開通時間', storage: 'backpack', tag: '重要' },
+            { name: '手機', note: '隨身攜帶', storage: 'backpack', tag: '重要' },
+            { name: '入住憑證', note: '電子檔或紙本', storage: 'backpack', tag: '重要' },
+            { name: '簽證', note: 'VJW QR Code', storage: 'backpack', tag: '重要' },
+            { name: '備用藥品', note: '暈車藥、感冒藥', storage: 'carryon', tag: '藥品' },
+            { name: '2-3套衣物', note: '洋蔥式穿搭', storage: 'checked', tag: '衣物' },
+            { name: '睡衣', note: '舒適為主', storage: 'checked', tag: '衣物' },
+            { name: '襪子*8', note: '多帶一雙備用', storage: 'checked', tag: '衣物' },
+            { name: '外套*1', note: '防風保暖', storage: 'checked', tag: '衣物' },
+            { name: '洗面乳/卸妝乳', note: '液體需託運', storage: 'checked', tag: '生活' },
+            { name: '衛生紙', note: '隨身包', storage: 'backpack', tag: '生活' },
+            { name: '牙膏、牙刷', note: '飯店通常有', storage: 'checked', tag: '生活' },
+            { name: '手機充電器', note: '線材收好', storage: 'carryon', tag: '3C' },
+            { name: '行動電源', note: '❌嚴禁託運', storage: 'carryon', tag: '3C' }
+        ];
+
+        let luggageData = {
+            '釔辰': createCommonItems().map((item, index) => ({ ...item, id: 1000 + index, completed: false })),
+            '耀慶': createCommonItems().map((item, index) => ({ ...item, id: 2000 + index, completed: false }))
+        };
+        
+        let voucherData = [
+            { id: 1, type: 'train', title: 'Haruka 車票', note: 'QR Code', img: null },
+            { id: 2, type: 'sim-card', title: '網卡資訊', note: '截圖', img: null },
+        ];
+
+        let phrasesData = [
+            { id: 1, ch: "你好", jp: "こんにちは", ro: "Konnichiwa" },
+            { id: 2, ch: "謝謝", jp: "ありがとうございます", ro: "Arigatou gozaimasu" },
+            { id: 3, ch: "不好意思", jp: "すみません", ro: "Sumimasen" },
+            { id: 4, ch: "是 / 不是", jp: "はい / いいえ", ro: "Hai / Iie" },
+            { id: 5, ch: "多少錢", jp: "いくらですか", ro: "Ikura desu ka" },
+            { id: 6, ch: "我要這個", jp: "これをお願いします", ro: "Kore o onegaishimasu" },
+            { id: 7, ch: "廁所在哪", jp: "トイレはどこですか", ro: "Toire wa doko desu ka" },
+            { id: 8, ch: "結帳", jp: "お会計をお願いします", ro: "Okaikei o onegaishimasu" },
+            { id: 9, ch: "能用信用卡嗎", jp: "カードは使えますか", ro: "Ka-do wa tsukaemasu ka" },
+            { id: 10, ch: "有中文菜單嗎", jp: "中国語のメニューはありますか", ro: "Chuugokugo no menyu wa arimasu ka" },
+            { id: 11, ch: "請給我水", jp: "お水をください", ro: "Omizu o kudasai" },
+            { id: 12, ch: "不用袋子", jp: "袋はいいです", ro: "Fukuro wa ii desu" }
+        ];
+
+        let notesData = [
+            { id: 3, title: "退稅規定", content: "消耗品/一般物品未稅滿 5000 日圓可退稅 (10%)。需出示護照。" },
+            { id: 4, title: "電壓插座", content: "100V 雙平腳插座 (與台灣通用，但無接地孔)。" }
+        ];
+
+        let hotelData = [
+            {
+                id: 1,
+                name: "KYOSTAY いろは 小路",
+                image: "https://img.travel.rakuten.co.jp/share/image_up/172257/LARGE/33b594abbbf1c70b5ed134a3c167f42588b9a5a2.47.1.26.2.jpg",
+                tags: ["獨棟民宿", "自助入住"],
+                address: "京都府京都市東山區 (近清水寺)",
+                checkIn: { date: "04/09 (四)", time: "15:00 後" },
+                checkOut: { date: "04/12 (日)", time: "10:00 前" },
+                duration: "3 晚",
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=KYOSTAY+Iroha+Koji",
+                note: "", // Added note field
+                details: {
+                    breakfast: "無提供早餐 (廚房可使用)",
+                    wifi: "ID: KyoStay_G / Pass: 20260409",
+                    amenities: ["洗衣機", "微波爐", "牙刷", "毛巾"],
+                    files: [
+                        { name: "入住指南 (Key Box).pdf", type: "pdf", url: "https://drive.google.com/file/d/1Y-MJd5obqmsl3geYdHx4C-tQ38FFw5WN/view" },
+                        { name: "垃圾分類說明.jpg", type: "img" }
+                    ],
+                    desc: "傳統京町家改建，位於安靜的小巷內。請務必在抵達前閱讀入住指南以取得鑰匙盒密碼。"
+                }
+            },
+            {
+                id: 2,
+                name: "FDS ZEAL (FDS ジール)",
+                image: "https://hotelreserve.fds.gr.jp/images/FDS%20ZEAL/11.jpg", 
+                tags: ["公寓式酒店", "難波區域"],
+                address: "大阪府大阪市浪速區 (近櫻川站)",
+                checkIn: { date: "04/12 (日)", time: "16:00 後" },
+                checkOut: { date: "04/17 (五)", time: "10:00 前" },
+                duration: "5 晚",
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=FDS+ZEAL+Osaka", 
+                note: "", // Added note field
+                details: {
+                    breakfast: "無提供 (有簡易廚房/陽台)",
+                    amenities: ["獨立衛浴", "洗衣機", "冰箱", "電磁爐"],
+                    luggage: "下午 12:00 起提供行李寄放服務。\n請將您的行李留在房間入口處。\n請勿進入主房間或打開行李，因為清潔過程中可能會移除已打開的物品。",
+                    files: [
+                        { name: "入住詳情 (官網)", type: "link", url: "https://hotelreserve.fds.gr.jp/access/ZEAL/en/" },
+                        { name: "自助入住密碼鎖.pdf", type: "pdf" },
+                        { name: "前往路線圖 (1).jpg", type: "img" },
+                        { name: "前往路線圖 (2).jpg", type: "img" }
+                    ],
+                    desc: "現代風格公寓，空間寬敞適合長住。距離難波商圈步行可達，附近有超市與便利商店。"
+                }
+            },
+            {
+                id: 3,
+                name: "OMO 關西機場 by 星野集團",
+                image: "https://cf.bstatic.com/xdata/images/hotel/max500/440964534.jpg?k=196be052a08744e957143fc4f8c22135ec42648fe5f40798a4e5eb318efd90cf&o=&hp=1", 
+                tags: ["機場飯店", "大浴場", "星野"],
+                address: "大阪府泉佐野市 (臨空城站直結)",
+                checkIn: { date: "04/17 (五)", time: "15:00" },
+                checkOut: { date: "04/18 (六)", time: "11:00" },
+                duration: "1 晚",
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=OMO+Kansai+Airport", 
+                note: "", // Added note field
+                details: {
+                    breakfast: "21F 景觀自助餐 (06:30~10:00)",
+                    amenities: ["大浴場/桑拿", "機場接駁", "OMO Base", "睡衣"],
+                    files: [
+                        { name: "接駁車時刻表.jpg", type: "img" }
+                    ],
+                    desc: "星野集團旗下機場飯店，擁有絕美海景與大浴場。位於臨空城站旁，去機場或Outlet都超方便。"
+                }
+            }
+        ];
+
+        let scheduleItemsData = {
+            1: [
+                { id: 101, time: '15:45', type: 'transport', title: '抵達關西機場', location: 'Kansai Airport (KIX)', note: '航班 JX822 / 第二航廈' },
+                { id: 102, time: '17:00', type: 'transport', title: '搭乘 Haruka', location: '前往京都', note: '事先兌換車票' },
+                { id: 103, time: '18:30', type: 'hotel', title: '民宿 Check-in', location: 'KYOSTAY いろは 小路', note: '密碼: 2026' },
+                { id: 104, time: '19:30', type: 'food', title: '晚餐：燒肉弘', location: '京都駅前店', note: '已預約' }
+            ],
+            2: [
+                { id: 201, time: '09:00', type: 'spot', title: '清水寺', location: '京都市東山區', note: '穿和服' }
+            ]
+        };
+
+        const scheduleDates = [
+            { day: 1, date: "09", week: "週四", loc: "移動/京都" },
+            { day: 2, date: "10", week: "週五", loc: "京都" },
+            { day: 3, date: "11", week: "週六", loc: "京都" },
+            { day: 4, date: "12", week: "週日", loc: "大阪" },
+            { day: 5, date: "13", week: "週一", loc: "大阪" },
+            { day: 6, date: "14", week: "週二", loc: "神戶" },
+            { day: 7, date: "15", week: "週三", loc: "大阪" },
+            { day: 8, date: "16", week: "週四", loc: "大阪" },
+            { day: 9, date: "17", week: "週五", loc: "泉佐野" },
+            { day: 10, date: "18", week: "週六", loc: "返程" }
+        ];
+
+        const tagConfig = {
+            '重要': { bg: '#FFFBEB', text: '#D97706', icon: 'fa-star' }, 
+            '3C': { bg: '#F5F7FF', text: '#3E3E3A', icon: 'fa-plug' }, 
+            '生活': { bg: '#F6F9F4', text: '#7C8C64', icon: 'fa-mug-hot' }, 
+            '衣物': { bg: '#FAF5FF', text: '#8C8C88', icon: 'fa-shirt' }, 
+            '藥品': { bg: '#FEF2F2', text: '#D95D5D', icon: 'fa-capsules' }, 
+            '其他': { bg: '#F4F4F5', text: '#71717A', icon: 'fa-layer-group' } 
+        };
+
+        // NEW: Flight Data Structure
+        let flightData = [
+            {
+                id: 1,
+                type: 'outbound',
+                date: '2026.04.09',
+                dep: { code: 'TPE', name: '臺灣桃園', time: '10:15' },
+                arr: { code: 'KIX', name: '大阪關西', time: '14:00' },
+                duration: '2h 45m',
+                flightNo: 'JX822',
+                baggage: { checked: '1件/23kg', carry: '1件/7kg', personal: '個人物品' },
+                note: '' 
+            },
+            {
+                id: 2,
+                type: 'inbound',
+                date: '2026.04.18',
+                dep: { code: 'KIX', name: '大阪關西', time: '15:10' },
+                arr: { code: 'TPE', name: '臺灣桃園', time: '17:05' },
+                duration: '2h 55m',
+                flightNo: 'JX823',
+                baggage: { checked: '1件/23kg', carry: '1件/7kg', personal: '個人物品' },
+                note: '' 
+            }
+        ];
+
+        function loadFromLocal() {
+            const saved = localStorage.getItem('kansai_app_data_v1');
+            if(saved) {
+                try {
+                    const parsed = JSON.parse(saved);
+                    todoData = parsed.todo || todoData;
+                    luggageData = parsed.luggage || luggageData;
+                    voucherData = parsed.voucher || voucherData;
+                    notesData = parsed.notes || notesData;
+                    emergencyData = parsed.emergency || emergencyData;
+                    phrasesData = parsed.phrases || phrasesData;
+                    scheduleItemsData = parsed.schedule || scheduleItemsData;
+                    if (parsed.flight) flightData = parsed.flight;
+                    if (parsed.hotel) hotelData = parsed.hotel;
+                    
+                    // Theme Logic
+                    if (parsed.userThemes) {
+                        userThemes = parsed.userThemes;
+                    } else if (parsed.theme) {
+                        // Migration
+                        userThemes = { '釔辰': parsed.theme, '耀慶': parsed.theme };
+                    }
+                    
+                    // Apply theme for the user who is currently set (default '釔辰')
+                    applyTheme(userThemes[currentUser]);
+
+                } catch(e) { console.error('Load failed', e); }
+            }
+        }
+
+        function saveToLocal() {
+            const dataToSave = {
+                todo: todoData,
+                luggage: luggageData,
+                voucher: voucherData,
+                notes: notesData,
+                emergency: emergencyData,
+                phrases: phrasesData,
+                schedule: scheduleItemsData,
+                userThemes: userThemes, // Save the map
+                flight: flightData,
+                hotel: hotelData
+            };
+            localStorage.setItem('kansai_app_data_v1', JSON.stringify(dataToSave));
+            updateSaveStatus('saved');
+        }
+
+        function applyTheme(themeName) {
+            if (!themeName) return;
+            currentTheme = themeName;
+            
+            // Update the preference for the current user
+            userThemes[currentUser] = themeName;
+
+            const theme = themes[themeName];
+            if (!theme) return;
+            const root = document.documentElement;
+            for (const [key, value] of Object.entries(theme)) {
+                root.style.setProperty(key, value);
+            }
+            saveToLocal();
+        }
+
+        function openThemeModal() {
+            openModal();
+            modalTitle.innerText = "切換風格";
+            modalIcon.className = "fa-solid fa-palette";
+            modalInputArea.classList.add('hidden');
+            modalBody.innerHTML = `
+                <div class="space-y-3">
+                    ${Object.keys(themes).map(key => {
+                        const t = themes[key];
+                        const name = key === 'kyoto' ? '京都' : key === 'uji' ? '宇治' : key === 'osaka' ? '大阪' : '神戶';
+                        return `
+                        <div onclick="selectTheme('${key}')" class="theme-option ${currentTheme === key ? 'active' : ''} p-4 rounded-2xl border-2 cursor-pointer transition-all duration-200 flex items-center gap-4 group" style="${currentTheme === key ? `border-color: ${t['--color-primary']}; background-color: ${t['--color-light']}` : 'border-color: #F3F4F6'}">
+                            <div class="w-12 h-12 rounded-full shadow-sm shrink-0 relative overflow-hidden ring-2 ring-white" style="background: linear-gradient(135deg, ${t['--color-primary']} 50%, ${t['--color-secondary']} 50%);"></div>
+                            <div class="flex-1">
+                                <div class="font-black text-gray-800 font-serif text-base flex items-center gap-2">
+                                    ${name}
+                                    ${currentTheme === key ? `<i class="fa-solid fa-check-circle text-sm" style="color: ${t['--color-primary']}"></i>` : ''}
+                                </div>
+                            </div>
+                        </div>`;
+                    }).join('')}
+                </div>
+            `;
+            modalActions.innerHTML = `<button onclick="closeModal()" class="w-full py-3 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors font-serif">關閉</button>`;
+        }
+
+        function selectTheme(theme) {
+            applyTheme(theme);
+            openThemeModal();
+        }
+
+        function switchView(viewId) {
+            document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
+            document.getElementById(`view-${viewId}`).classList.add('active');
+            document.getElementById(`tab-${viewId}`).classList.add('active');
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+            
+            if(viewId === 'booking') {
+                renderFlightList(); 
+                renderVoucherList();
+                renderHotelList(); 
+                document.getElementById('booking-flight').classList.add('active'); 
+                switchBookingTab('flight');
+            } else if(viewId === 'todo') {
+                switchTodoTab('general');
+            } else if(viewId === 'checklist') {
+                renderLuggageList();
+            } else if(viewId === 'schedule') {
+                renderScheduleDates(); 
+                renderScheduleTimeline();
+            }
+        }
+        
+        function switchBookingTab(tab) {
+            document.querySelectorAll('.booking-sub-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`booking-${tab}`).classList.add('active');
+            document.querySelectorAll('#view-booking .sub-tab-btn').forEach(el => {
+                el.classList.remove('active');
+                el.classList.add('inactive');
+            });
+            const activeTab = document.getElementById(`subtab-${tab}`);
+            if(activeTab) {
+                activeTab.classList.remove('inactive');
+                activeTab.classList.add('active');
+            }
+        }
+
+        function switchTodoTab(tab) {
+            currentTodoTab = tab;
+            document.querySelectorAll('.todo-sub-section').forEach(el => el.classList.remove('active'));
+            document.getElementById(`todo-${tab}`).classList.add('active');
+            document.querySelectorAll('#view-todo .sub-tab-btn').forEach(el => { el.classList.remove('active'); el.classList.add('inactive'); });
+            const activeTab = document.getElementById(`subtab-todo-${tab}`);
+            if(activeTab) { activeTab.classList.remove('inactive'); activeTab.classList.add('active'); }
+            if (tab === 'shopping') switchShoppingUser(viewingShoppingUser);
+            else if (tab === 'general') switchTodoAssignee(viewingTodoAssignee);
+            else { renderTodoList(tab); updateTodoUiState(); }
+        }
+
+        function switchShoppingUser(user) {
+            viewingShoppingUser = user;
+            viewingShoppingStore = null; 
+            const btn1 = document.getElementById('shopping-view-user-1'); const btn2 = document.getElementById('shopping-view-user-2');
+            const activeClass = "flex-1 py-1.5 text-xs font-bold text-gray-700 bg-kansai-bg rounded-lg transition-all font-serif";
+            const inactiveClass = "flex-1 py-1.5 text-xs text-gray-400 hover:bg-gray-50 transition-all font-serif";
+            if (user === '釔辰') { btn1.className = activeClass; btn2.className = inactiveClass; } else { btn1.className = inactiveClass; btn2.className = activeClass; }
+            updateTodoUiState(); renderTodoList('shopping');
+        }
+
+        function switchTodoAssignee(user) {
+            viewingTodoAssignee = user;
+            const btn1 = document.getElementById('todo-view-user-1'); const btn2 = document.getElementById('todo-view-user-2'); const btn3 = document.getElementById('todo-view-user-3');
+            const activeClass = "flex-1 py-1.5 text-xs font-bold text-gray-700 bg-kansai-bg rounded-lg transition-all font-serif";
+            const inactiveClass = "flex-1 py-1.5 text-xs text-gray-400 hover:bg-gray-50 transition-all font-serif";
+            if(btn1) btn1.className = (user === '釔辰') ? activeClass : inactiveClass;
+            if(btn2) btn2.className = (user === '耀慶') ? activeClass : inactiveClass;
+            if(btn3) btn3.className = (user === '共同') ? activeClass : inactiveClass;
+            updateTodoUiState(); renderTodoList('general');
+        }
+
+        function updateTodoUiState() {
+            const btn = document.getElementById('add-todo-btn');
+            if (!btn) return;
+            let canAdd = false;
+            if (currentTodoTab === 'shopping') canAdd = (currentUser === viewingShoppingUser);
+            else if (currentTodoTab === 'general') canAdd = (currentUser === viewingTodoAssignee || viewingTodoAssignee === '共同');
+            else canAdd = true;
+            btn.style.display = canAdd ? 'flex' : 'none';
+        }
+
+        function openShoppingStore(storeName) {
+            viewingShoppingStore = storeName;
+            renderTodoList('shopping');
+        }
+
+        function closeShoppingStore() {
+            viewingShoppingStore = null;
+            renderTodoList('shopping');
+        }
+
+        function renderTodoList(type) {
+            let listId = `todo-${type}`;
+            let items = [];
+            if (type === 'shopping') { listId = 'shopping-list-container'; items = todoData.shopping[viewingShoppingUser] || []; } 
+            else if (type === 'general') { listId = 'general-list-container'; items = (todoData.general || []).filter(item => { const itemAssignee = item.assignee || '共同'; return itemAssignee === viewingTodoAssignee; }); } 
+            else { items = todoData[type] || []; }
+            
+            const list = document.getElementById(listId);
+            if (!list) return;
+            list.innerHTML = '';
+            
+            if (type === 'shopping') {
+                const groupedItems = {};
+                items.forEach(item => { const store = item.store || '其他'; if (!groupedItems[store]) groupedItems[store] = []; groupedItems[store].push(item); });
+                if (!viewingShoppingStore) {
+                    const stores = Object.keys(groupedItems);
+                    if (stores.length === 0) { list.innerHTML = '<div class="text-center text-gray-300 text-xs py-10 font-serif font-bold">尚無購物清單</div>'; return; }
+                    list.innerHTML = '<div class="grid grid-cols-2 gap-3" id="store-grid"></div>';
+                    const grid = document.getElementById('store-grid');
+                    const textColors = ['text-[#B45D4F]', 'text-[#7C8C64]', 'text-[#3E3E3A]', 'text-[#8C8C88]', 'text-[#A0522D]', 'text-[#556B2F]'];
+                    stores.forEach((store, index) => {
+                        const count = groupedItems[store].filter(i => !i.checked).length;
+                        const total = groupedItems[store].length;
+                        const colorClass = textColors[index % textColors.length];
+                        const cardHtml = `<div class="app-card p-4 flex flex-col justify-between h-24 cursor-pointer hover:shadow-md transition-all active:scale-95 group border border-transparent hover:border-kansai-light" onclick="openShoppingStore('${store}')"><div class="flex justify-between items-start mb-2"><div class="flex items-center gap-2 overflow-hidden"><div class="w-2 h-2 rounded-full ${colorClass.replace('text-', 'bg-')} flex-shrink-0"></div><h4 class="font-bold text-sm truncate tracking-wide text-kansai-text group-hover:text-kansai-red transition-colors font-serif">${store}</h4></div><span class="text-[10px] font-bold ${count > 0 ? 'text-kansai-accent bg-[#F9F8F6]' : 'text-kansai-green bg-[#F6F9F4]'} px-2 py-0.5 rounded-full shrink-0">${count > 0 ? count : '<i class="fa-solid fa-check"></i>'}</span></div><div class="flex items-center text-[10px] text-kansai-accent mt-auto pl-3.5 font-bold"><span>${total} 品項</span></div></div>`;
+                        grid.insertAdjacentHTML('beforeend', cardHtml);
+                    });
+                } else {
+                    const storeItems = groupedItems[viewingShoppingStore] || [];
+                    const headerHtml = `<div class="flex items-center gap-3 mb-4 sticky top-0 bg-kansai-bg z-10 py-2"><button onclick="closeShoppingStore()" class="w-9 h-9 rounded-full bg-white shadow-sm border border-gray-100 flex items-center justify-center text-gray-500 hover:text-gray-800 transition-colors active:scale-95"><i class="fa-solid fa-arrow-left text-sm"></i></button><div><h3 class="font-black text-lg text-kansai-text font-serif">${viewingShoppingStore}</h3><div class="text-[10px] text-gray-400 font-bold">共 ${storeItems.length} 項商品</div></div></div>`;
+                    list.innerHTML = headerHtml;
+                    if (storeItems.length === 0) list.insertAdjacentHTML('beforeend', '<div class="text-center text-gray-300 text-xs py-10 font-serif font-bold">此地點無商品</div>');
+                    else {
+                        const itemsContainer = document.createElement('div');
+                        itemsContainer.className = 'grid grid-cols-2 gap-3 pb-20';
+                        storeItems.forEach(item => { itemsContainer.insertAdjacentHTML('beforeend', createShoppingCardHtml(item, currentUser === viewingShoppingUser)); });
+                        list.appendChild(itemsContainer);
+                    }
+                }
+                return;
+            }
+            if (items.length === 0) { list.innerHTML = '<div class="text-center text-gray-300 text-xs py-10 font-serif font-bold">尚無項目</div>'; return; }
+            const canEdit = (type === 'wishlist') ? true : (viewingTodoAssignee === '共同' || currentUser === viewingTodoAssignee);
+            items.forEach(item => {
+                const isChecked = item.checked ? 'checked' : '';
+                const lineThrough = item.checked ? 'line-through opacity-50' : '';
+                const checkboxDisabled = canEdit ? '' : 'disabled';
+                const cursor = canEdit ? 'cursor-pointer' : 'cursor-default';
+                let icon = type === 'wishlist' ? '<i class="fa-solid fa-location-dot text-kansai-red mr-2 text-xs"></i>' : '';
+                let buttonsHtml = canEdit ? `<div class="flex items-center gap-2"><button onclick="openTodoModal('edit', ${item.id})" class="text-gray-300 hover:text-blue-400 px-1 text-xs"><i class="fa-solid fa-pen"></i></button><button onclick="askDeleteTodo('${type}', ${item.id})" class="text-gray-300 hover:text-red-400 px-1 text-xs"><i class="fa-solid fa-trash-can"></i></button></div>` : '';
+                const html = `<div class="app-card p-4 flex items-center justify-between border border-transparent hover:border-kansai-light transition-colors shadow-sm"><div class="flex items-center gap-3 w-full"><label class="custom-checkbox flex items-center gap-3 ${cursor}" onclick="event.stopPropagation()"><input type="checkbox" class="hidden" ${isChecked} ${checkboxDisabled} onchange="toggleTodoComplete('${type}', ${item.id})"><div class="w-5 h-5 border-2 border-gray-300 rounded-md flex items-center justify-center transition-colors flex-shrink-0"><i class="fa-solid fa-check text-white text-[10px] opacity-0"></i></div></label><div class="flex-1"><div class="flex items-center">${icon}<span class="text-sm text-kansai-text font-bold ${lineThrough}">${item.text}</span></div>${item.note ? `<div class="text-[10px] text-gray-400 mt-0.5 font-bold">${item.note}</div>` : ''}</div>${buttonsHtml}</div></div>`;
+                list.insertAdjacentHTML('beforeend', html);
+            });
+        }
+        
+        function createShoppingCardHtml(item, canEdit = true) {
+            const isChecked = item.checked ? 'checked' : '';
+            const opacityClass = item.checked ? 'opacity-60' : '';
+            const grayscaleClass = item.checked ? 'grayscale' : '';
+            const checkboxDisabled = canEdit ? '' : 'disabled';
+            let bgStyle = item.img ? `background-image: url('${item.img}');` : '';
+            let iconHtml = item.img ? '' : '<i class="fa-solid fa-image text-3xl text-gray-200"></i>';
+            let clickViewAction = item.img ? `onclick="viewImage('${item.img}')"` : '';
+            let buttonsHtml = canEdit ? `<div class="flex gap-3"><button onclick="openTodoModal('edit', ${item.id})" class="text-gray-300 hover:text-blue-400 transition-colors"><i class="fa-solid fa-pen text-xs"></i></button><button onclick="askDeleteTodo('shopping', ${item.id})" class="text-gray-300 hover:text-red-400 transition-colors"><i class="fa-solid fa-trash-can text-xs"></i></button></div>` : '';
+            return `<div class="app-card overflow-hidden flex flex-col ${opacityClass} transition-all duration-300 hover:shadow-lg h-full border border-gray-100"><div class="relative h-36 bg-gray-50 flex items-center justify-center bg-cover bg-center ${grayscaleClass}" style="${bgStyle}" ${clickViewAction}>${iconHtml}${item.img ? '<div class="absolute inset-0 bg-black/5 hover:bg-black/0 transition-colors cursor-pointer"></div>' : ''}<label class="absolute top-2 right-2 w-8 h-8 bg-white/90 backdrop-blur-sm rounded-full flex items-center justify-center shadow-sm cursor-pointer z-10 card-checkbox hover:bg-white transition-colors" onclick="event.stopPropagation()"><input type="checkbox" class="hidden" ${isChecked} ${checkboxDisabled} onchange="toggleTodoComplete('shopping', ${item.id})"><div class="w-5 h-5 border-2 border-gray-300 rounded-full flex items-center justify-center transition-all bg-white"><i class="fa-solid fa-check text-white text-[10px] opacity-0 transition-opacity"></i></div></label></div><div class="p-4 flex-1 flex flex-col"><h4 class="font-black text-kansai-text text-sm leading-tight mb-1 line-clamp-2">${item.text}</h4><p class="text-[10px] text-gray-400 mb-3 line-clamp-1 font-bold">${item.note || '&nbsp;'}</p><div class="mt-auto border-t border-gray-50 pt-2 flex justify-between items-center"><span class="text-[9px] font-black px-2 py-0.5 rounded ${item.checked ? 'text-white bg-kansai-red' : 'text-kansai-red bg-kansai-bg border border-kansai-light'}">${item.checked ? '已買' : '未買'}</span>${buttonsHtml}</div></div></div>`;
+        }
+
+        function setScheduleDay(day) {
+            currentScheduleDay = day;
+            renderScheduleDates();
+            renderScheduleTimeline(); 
+            showToast(`切換至 Day ${day}`);
+        }
+
+        function renderScheduleDates() {
+            const container = document.getElementById('schedule-dates-container');
+            if(!container) return;
+            container.innerHTML = '';
+            scheduleDates.forEach(item => {
+                const isActive = item.day === currentScheduleDay;
+                const baseClass = "flex-shrink-0 flex flex-col items-center justify-center gap-0.5 w-[4.5rem] h-[5.5rem] rounded-2xl transition-all duration-300 relative overflow-hidden cursor-pointer select-none border-2 border-transparent";
+                const activeClass = "bg-kansai-red text-white shadow-xl shadow-kansai-red/30 scale-105 z-10 -translate-y-1 font-bold";
+                const inactiveClass = "bg-white border-gray-100 hover:border-kansai-light hover:shadow-md hover:-translate-y-0.5";
+                const dayTextClass = isActive ? "text-white/60" : "text-gray-300";
+                const dateTextClass = isActive ? "text-white" : "text-kansai-text";
+                let weekTextClass = isActive ? "text-white/80" : "text-gray-400";
+                if (!isActive) { if (item.week.includes('六')) weekTextClass = "text-blue-500 font-black"; if (item.week.includes('日')) weekTextClass = "text-red-500 font-black"; }
+                const html = `<div onclick="setScheduleDay(${item.day})" class="${baseClass} ${isActive ? activeClass : inactiveClass}">${isActive ? '<div class="absolute top-0 left-0 w-full h-1.5 bg-white/20"></div>' : ''}<span class="text-[9px] font-black tracking-widest uppercase ${dayTextClass} mt-1 font-serif">DAY ${item.day}</span><span class="text-2xl font-black font-serif leading-none ${dateTextClass}">${item.date}</span><span class="text-[10px] font-bold ${weekTextClass} mb-1 font-serif">${item.week}</span></div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function renderScheduleTimeline() {
+            const container = document.getElementById('schedule-items-list');
+            if(!container) return;
+            container.innerHTML = '';
+            const items = scheduleItemsData[currentScheduleDay] || [];
+            items.sort((a, b) => a.time.localeCompare(b.time));
+            if (items.length === 0) { container.innerHTML = `<div class="text-center text-gray-300 text-xs py-10 pl-4 font-serif font-bold">本日尚無行程</div>`; return; }
+            
+            items.forEach(item => {
+                let iconClass = 'fa-location-dot';
+                let typeText = '景點';
+                if(item.type === 'transport') { iconClass = 'fa-plane'; typeText = '交通'; }
+                if(item.type === 'food') { iconClass = 'fa-utensils'; typeText = '餐飲'; }
+                if(item.type === 'hotel') { iconClass = 'fa-hotel'; typeText = '住宿'; }
+                if(item.type === 'shopping') { iconClass = 'fa-bag-shopping'; typeText = '購物'; }
+                
+                const html = `
+                <div class="relative pl-8 mb-6 group">
+                    <div class="timeline-dot shadow-sm"></div>
+                    <div class="text-xs font-mono text-gray-400 mb-1.5 pl-1 flex items-center justify-between font-bold">
+                        <span>${item.time} <i class="fa-solid ${iconClass} text-[10px] ml-1 text-kansai-accent"></i> ${typeText}</span>
+                    </div>
+                    <div class="app-card p-5 relative transition-all active:scale-[0.98] border border-gray-100 hover:border-kansai-light shadow-md">
+                        <div class="flex justify-between items-start">
+                            <h3 class="font-black text-kansai-text text-lg leading-tight mr-2 font-serif">${item.title}</h3>
+                            <div class="flex gap-3 shrink-0">
+                                <button onclick="openScheduleModal('edit', ${item.id})" class="text-gray-300 hover:text-kansai-red p-1 transition-colors"><i class="fa-solid fa-pen text-sm"></i></button>
+                                <button onclick="askDeleteSchedule(${item.id})" class="text-gray-300 hover:text-red-400 p-1 transition-colors"><i class="fa-solid fa-trash-can text-sm"></i></button>
+                            </div>
+                        </div>
+                        <div class="flex items-center text-xs text-gray-500 mt-1 mb-3 font-bold">
+                            <i class="fa-solid fa-location-dot mr-1.5 text-kansai-accent"></i> ${item.location}
+                        </div>
+                        ${item.note ? `<div class="text-[11px] text-gray-600 bg-kansai-bg p-3 rounded-xl mt-1 border border-kansai-light whitespace-pre-wrap font-sans leading-relaxed">${item.note}</div>` : ''}
+                        <div class="mt-4 pt-3 border-t border-dashed border-gray-200 flex justify-end">
+                            <button onclick="openScheduleAiMenu(${item.id})" class="ai-sparkle-btn text-[10px] px-3 py-1.5 rounded-full flex items-center gap-1.5 shadow-sm bg-white text-kansai-text border border-kansai-light hover:border-kansai-red hover:text-kansai-red transition-all font-bold">
+                                <i class="fa-solid fa-wand-magic-sparkles"></i> AI 助手
+                            </button>
+                        </div>
+                    </div>
+                </div>`;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // --- NEW: AI Schedule Helper ---
+        function openScheduleAiMenu(id) {
+            const items = scheduleItemsData[currentScheduleDay] || [];
+            const item = items.find(i => i.id === id);
+            if (!item) return;
+
+            openModal();
+            modalTitle.innerText = "AI 行程助手";
+            modalIcon.className = "fa-solid fa-wand-magic-sparkles";
+            modalInputArea.classList.add('hidden');
+            
+            // AI Options Menu
+            // 修改：按鈕 onclick 事件現在會傳遞 id，以便寫入資料
+            modalBody.innerHTML = `
+                <div class="space-y-3">
+                    <div class="p-3 bg-[#FAFAFA] rounded-xl border border-gray-100 mb-4">
+                        <div class="text-xs text-gray-400 mb-1 font-bold">目前選擇</div>
+                        <div class="text-base font-black text-kansai-text font-serif">${item.title}</div>
+                        <div class="text-xs text-gray-500"><i class="fa-solid fa-location-dot mr-1"></i>${item.location}</div>
+                    </div>
+                    <button onclick="executeScheduleAi('tip', '${item.title}', ${item.id})" class="w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-kansai-light hover:bg-kansai-bg transition-all flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-yellow-100 text-yellow-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform"><i class="fa-solid fa-lightbulb"></i></div>
+                        <div>
+                            <div class="font-bold text-gray-700 font-serif">實用攻略</div>
+                            <div class="text-[10px] text-gray-400">寫入遊玩撇步、注意事項</div>
+                        </div>
+                        <i class="fa-solid fa-plus ml-auto text-gray-300 group-hover:text-kansai-red"></i>
+                    </button>
+                    <button onclick="executeScheduleAi('food', '${item.location}', ${item.id})" class="w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-kansai-light hover:bg-kansai-bg transition-all flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-orange-100 text-orange-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform"><i class="fa-solid fa-utensils"></i></div>
+                        <div>
+                            <div class="font-bold text-gray-700 font-serif">附近美食</div>
+                            <div class="text-[10px] text-gray-400">寫入周邊高評價餐廳</div>
+                        </div>
+                        <i class="fa-solid fa-plus ml-auto text-gray-300 group-hover:text-kansai-red"></i>
+                    </button>
+                    <button onclick="executeScheduleAi('transport', '${item.location}', ${item.id})" class="w-full text-left p-4 rounded-xl border-2 border-gray-100 hover:border-kansai-light hover:bg-kansai-bg transition-all flex items-center group">
+                        <div class="w-10 h-10 rounded-full bg-blue-100 text-blue-600 flex items-center justify-center mr-3 group-hover:scale-110 transition-transform"><i class="fa-solid fa-train-subway"></i></div>
+                        <div>
+                            <div class="font-bold text-gray-700 font-serif">交通建議</div>
+                            <div class="text-[10px] text-gray-400">寫入前往方式</div>
+                        </div>
+                        <i class="fa-solid fa-plus ml-auto text-gray-300 group-hover:text-kansai-red"></i>
+                    </button>
+                </div>
+            `;
+            modalActions.innerHTML = `<button onclick="closeModal()" class="w-full py-3 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors font-serif">取消</button>`;
+        }
+
+        async function executeScheduleAi(type, keyword, id) {
+            // Show Loading
+            modalBody.innerHTML = "";
+            modalActions.innerHTML = "";
+            modalLoading.classList.remove('hidden');
+
+            let prompt = "";
+            let categoryLabel = "";
+
+            // 定義提示詞與分類標籤
+            if (type === 'tip') {
+                prompt = `請針對「${keyword}」給出 3 點最實用的遊玩建議或注意事項（每點 20 字以內）。請用列點方式，不要有 Markdown 格式。繁體中文。`;
+                categoryLabel = "💡 實用攻略";
+            }
+            else if (type === 'food') {
+                prompt = `請推薦 3 家位於「${keyword}」附近的高評價美食（午餐或晚餐），格式為「店名：特色」。繁體中文。`;
+                categoryLabel = "🍽️ 附近美食";
+            }
+            else if (type === 'transport') {
+                prompt = `請簡要說明前往「${keyword}」的交通方式建議（假設從該城市主要車站出發），限 100 字以內，不要有 Markdown 格式。繁體中文。`;
+                categoryLabel = "🚇 交通建議";
+            }
+
+            try {
+                const text = await callGemini(prompt);
+                modalLoading.classList.add('hidden');
+                
+                if (text) {
+                    // 取得目前的行程項目
+                    const items = scheduleItemsData[currentScheduleDay] || [];
+                    const idx = items.findIndex(i => i.id === id);
+                    
+                    if (idx !== -1) {
+                        const originalNote = items[idx].note || "";
+                        // 如果原本有內容，先換兩行
+                        const separator = originalNote ? "\n\n" : "";
+                        
+                        // 組合新內容：【分類】+ AI回應
+                        const newContent = `【 ${categoryLabel} 】\n${text.trim()}`;
+                        
+                        // 更新資料
+                        items[idx].note = originalNote + separator + newContent;
+                        
+                        // 存檔並更新畫面
+                        saveToLocal();
+                        renderScheduleTimeline();
+                        
+                        // 關閉視窗並顯示成功訊息
+                        closeModal();
+                        showToast(`已將 ${categoryLabel} 加入備註！`);
+                    } else {
+                         throw new Error("Item not found");
+                    }
+                } else {
+                    throw new Error("Empty response");
+                }
+
+            } catch (e) {
+                console.error(e);
+                modalLoading.classList.add('hidden');
+                modalBody.innerHTML = `<div class="text-red-500 text-center font-serif font-bold">無法取得回應。<br><span class="text-xs text-gray-400">請確認 API Key 是否設定</span></div>`;
+                modalActions.innerHTML = `<button onclick="closeModal()" class="w-full bg-gray-100 text-gray-500 px-6 py-3 rounded-xl font-bold font-serif">關閉</button>`;
+            }
+        }
+
+
+        // --- TTS & Utils ---
+        async function playTTS(text) {
+            if (!text) return;
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ja-JP'; 
+                const voices = window.speechSynthesis.getVoices();
+                const jpVoice = voices.find(voice => voice.lang === 'ja-JP');
+                if (jpVoice) utterance.voice = jpVoice;
+                window.speechSynthesis.speak(utterance);
+                return;
+            }
+
+            if (!apiKey) return;
+            
+            document.getElementById('audio-wave').classList.remove('hidden'); 
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-tts:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: text }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Aoede" } } } } };
+            try {
+                const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                const data = await response.json();
+                const audioData = data.candidates[0].content.parts[0].inlineData.data;
+                const pcmValues = base64ToInt16Array(audioData);
+                const wavBytes = pcmToWav(pcmValues, 24000); 
+                const blob = new Blob([wavBytes], { type: 'audio/wav' });
+                const audio = new Audio(URL.createObjectURL(blob));
+                audio.onended = () => document.getElementById('audio-wave').classList.add('hidden'); 
+                audio.play();
+            } catch (e) { 
+                console.error("TTS Error", e); 
+                document.getElementById('audio-wave').classList.add('hidden'); 
+            }
+        }
+
+        async function callGemini(prompt, isJson = false) {
+            if(!apiKey) {
+                return new Promise(resolve => {
+                    setTimeout(() => {
+                        if(isJson) resolve('{"jp": "テスト", "ro": "Tesuto"}');
+                        else resolve("這是 AI 攻略的模擬回應。若要啟用真實 AI，請在程式碼中填入 API Key。");
+                    }, 1000);
+                });
+            }
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            const payload = { contents: [{ parts: [{ text: prompt }] }], generationConfig: isJson ? { responseMimeType: "application/json" } : {} };
+            for (let i = 0; i < 3; i++) {
+                try {
+                    const response = await fetch(url, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if (!response.ok) throw new Error(`API Error: ${response.status}`);
+                    const data = await response.json();
+                    return data.candidates[0].content.parts[0].text;
+                } catch (e) { if (i === 2) throw e; await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i))); }
+            }
+        }
+
+        function base64ToInt16Array(base64) {
+            const binaryString = window.atob(base64);
+            const bytes = new Uint8Array(binaryString.length);
+            for (let i = 0; i < binaryString.length; i++) bytes[i] = binaryString.charCodeAt(i);
+            return new Int16Array(bytes.buffer);
+        }
+
+        function pcmToWav(pcmData, sampleRate) {
+            const header = new ArrayBuffer(44);
+            const view = new DataView(header);
+            const totalDataLen = pcmData.length * 2;
+            const writeString = (view, offset, string) => { for (let i = 0; i < string.length; i++) view.setUint8(offset + i, string.charCodeAt(i)); };
+            writeString(view, 0, 'RIFF'); view.setUint32(4, 36 + totalDataLen, true); writeString(view, 8, 'WAVE'); writeString(view, 12, 'fmt ');
+            view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true); view.setUint32(24, sampleRate, true);
+            view.setUint32(28, sampleRate * 2, true); view.setUint16(32, 2, true); view.setUint16(34, 16, true); writeString(view, 36, 'data');
+            view.setUint32(40, totalDataLen, true);
+            const wavBytes = new Uint8Array(header.byteLength + totalDataLen);
+            wavBytes.set(new Uint8Array(header), 0); wavBytes.set(new Uint8Array(pcmData.buffer), header.byteLength);
+            return wavBytes;
+        }
+
+        // --- Booking View Functions ---
+
+        function renderFlightList() {
+            const container = document.getElementById('flight-list');
+            if (!container) return;
+            container.innerHTML = '';
+            flightData.forEach(flight => {
+                const isOutbound = flight.type === 'outbound';
+                const colorClass = isOutbound ? 'bg-kansai-red' : 'bg-kansai-green';
+                const iconClass = isOutbound ? 'fa-plane-departure' : 'fa-plane-arrival';
+                const title = isOutbound ? '去程航班' : '回程航班';
+                
+                const baggageHtml = `
+                    <div class="pt-3 border-t border-dashed border-gray-100">
+                        <div class="grid grid-cols-3 gap-2 text-center">
+                            <div class="flex flex-col items-center justify-start">
+                                <i class="fa-solid fa-suitcase-rolling text-kansai-text text-xs mb-1"></i>
+                                <span class="text-[10px] font-bold text-gray-600">託運</span>
+                                <span class="text-[9px] text-gray-400">${flight.baggage.checked}</span>
+                            </div>
+                            <div class="flex flex-col items-center justify-start group relative">
+                                <i class="fa-solid fa-briefcase text-kansai-text text-xs mb-1"></i>
+                                <span class="text-[10px] font-bold text-gray-600">手提</span>
+                                <span class="text-[9px] text-gray-400">${flight.baggage.carry}</span>
+                                <div class="text-[8px] text-gray-300 leading-tight scale-90 mt-0.5">36x23x56cm</div>
+                            </div>
+                            <div class="flex flex-col items-center justify-start">
+                                <i class="fa-solid fa-bag-shopping text-kansai-text text-xs mb-1"></i>
+                                <span class="text-[10px] font-bold text-gray-600">隨身</span>
+                                <span class="text-[9px] text-gray-400">${flight.baggage.personal}</span>
+                                <div class="text-[8px] text-gray-300 leading-tight scale-90 mt-0.5">40x10x30cm</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+
+                const noteHtml = `
+                    <div class="mt-3 pt-3 border-t border-dashed border-gray-100">
+                        <div class="flex justify-between items-start cursor-pointer group" onclick="openNoteModal('flight', ${flight.id})">
+                             <div class="text-xs text-gray-500 w-full">
+                                <span class="font-bold text-kansai-accent block mb-1"><i class="fa-solid fa-pen-to-square mr-1"></i>備註</span>
+                                <p class="text-gray-600 font-serif leading-relaxed ${!flight.note ? 'text-gray-300 italic' : ''}">
+                                    ${flight.note || '點擊新增備註...'}
+                                </p>
+                             </div>
+                        </div>
+                    </div>
+                `;
+
+                const html = `
+                    <div class="boarding-pass relative bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden group hover:shadow-md transition-shadow">
+                        <div class="${colorClass} px-5 py-3 flex justify-between items-center text-white relative z-10 transition-colors duration-500">
+                            <div class="flex items-center gap-2">
+                                <i class="fa-solid ${iconClass} text-sm opacity-90"></i>
+                                <span class="text-xs font-black tracking-[0.2em]">${title}</span>
+                            </div>
+                            <div class="text-[10px] font-mono font-bold bg-black/20 px-2 py-1 rounded-lg backdrop-blur-sm">${flight.date}</div>
+                        </div>
+                        
+                        <div class="p-4 pt-6 pb-4 relative">
+                            <div class="absolute -left-2 top-0 w-4 h-4 bg-kansai-bg rounded-full border-r border-gray-100 transition-colors duration-500"></div>
+                            <div class="absolute -right-2 top-0 w-4 h-4 bg-kansai-bg rounded-full border-l border-gray-100 transition-colors duration-500"></div>
+                            <div class="absolute left-2 right-2 top-2 border-t border-dashed border-gray-100"></div>
+
+                            <div class="flex justify-between items-end mb-2">
+                                <div class="text-left">
+                                    <div class="text-3xl font-black text-kansai-text font-serif tracking-tighter">${flight.dep.code}</div>
+                                    <div class="text-[10px] text-gray-400 font-bold tracking-wider">${flight.dep.name}</div>
+                                </div>
+                                
+                                <div class="flex-1 px-2 flex flex-col items-center pb-1">
+                                    <div class="flex items-center gap-1 text-[10px] text-gray-400 font-mono mb-1 font-bold">
+                                        ${flight.duration}
+                                    </div>
+                                    <div class="w-full flex items-center relative opacity-40 mb-1">
+                                        <div class="w-1 h-1 rounded-full bg-kansai-text"></div>
+                                        <div class="flex-1 h-[1px] bg-kansai-text"></div>
+                                        <div class="w-1 h-1 rounded-full bg-kansai-text"></div>
+                                        <i class="fa-solid fa-plane absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-sm text-kansai-text ${isOutbound ? '' : 'rotate-180'}"></i>
+                                    </div>
+                                    <div class="mt-0.5 text-[9px] font-bold ${isOutbound ? 'text-kansai-red' : 'text-kansai-green'} bg-[#FAFAFA] border border-kansai-light px-2 py-0.5 rounded-full">${flight.flightNo}</div>
+                                </div>
+
+                                <div class="text-right">
+                                    <div class="text-3xl font-black text-kansai-text font-serif tracking-tighter">${flight.arr.code}</div>
+                                    <div class="text-[10px] text-gray-400 font-bold tracking-wider">${flight.arr.name}</div>
+                                </div>
+                            </div>
+
+                            <div class="flex justify-between items-center mt-3 pt-3 border-t border-dashed border-gray-100 mb-4">
+                                <div class="text-left">
+                                    <div class="text-[10px] font-bold text-gray-400 mb-0.5 tracking-widest">DEP</div>
+                                    <div class="text-xl font-bold text-kansai-text font-serif">${flight.dep.time}</div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-[10px] font-bold text-gray-400 mb-0.5 tracking-widest">ARR</div>
+                                    <div class="text-xl font-bold text-kansai-text font-serif">${flight.arr.time}</div>
+                                </div>
+                            </div>
+
+                            ${baggageHtml}
+                            ${noteHtml}
+                        </div>
+                    </div>
+                `;
+                container.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function renderVoucherList() {
+            const list = document.getElementById('voucher-list');
+            if(!list) return;
+            list.innerHTML = '';
+            voucherData.forEach(v => {
+                let iconContent = `<i class="fa-solid fa-${v.type} text-2xl text-kansai-text"></i>`;
+                if(v.img) { iconContent = `<img src="${v.img}" class="w-full h-24 object-cover rounded-lg mb-2">`; } 
+                else if(v.note === 'PDF') { iconContent = `<i class="fa-solid fa-file-pdf text-2xl text-red-500"></i>`; }
+                const html = `<div class="app-card p-4 flex flex-col items-center justify-center gap-2 active:scale-95 transition-transform cursor-pointer relative group hover:border-kansai-red" onclick="openVoucherModal('edit', ${v.id})">${iconContent}<span class="text-xs font-bold text-gray-600 font-serif">${v.title}</span><span class="text-[10px] text-gray-400">${v.note}</span></div>`;
+                list.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        function renderHotelList() {
+            const list = document.getElementById('hotel-list');
+            if(!list) return;
+            list.innerHTML = '';
+            hotelData.forEach(hotel => {
+                let tagsHtml = hotel.tags.map(tag => `<span class="bg-black/30 backdrop-blur-md text-white text-[10px] px-2 py-1 rounded-full border border-white/20 font-medium font-serif"><i class="fa-solid fa-tag mr-1"></i>${tag}</span>`).join('');
+                
+                const noteHtml = `
+                    <div class="mb-4 bg-[#FAFAFA] rounded-xl p-3 border border-kansai-light cursor-pointer group hover:border-kansai-red/50 transition-colors" onclick="openNoteModal('hotel', ${hotel.id})">
+                        <div class="text-[10px] font-bold text-kansai-accent mb-1"><i class="fa-solid fa-pen-to-square mr-1"></i>備註</div>
+                        <p class="text-xs text-gray-600 font-serif leading-relaxed ${!hotel.note ? 'text-gray-300 italic' : ''}">
+                             ${hotel.note || '點擊新增備註...'}
+                        </p>
+                    </div>
+                `;
+
+                const html = `<div class="app-card overflow-hidden group"><div class="relative h-48 cursor-pointer" onclick="openHotelModal(${hotel.id})"><img src="${hotel.image}" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105" alt="${hotel.name}"><div class="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent"></div><div class="absolute top-3 left-3 flex gap-2">${tagsHtml}</div><div class="absolute bottom-3 left-4 right-4 text-white"><h3 class="font-bold text-xl mb-1 text-shadow-sm tracking-wide font-serif">${hotel.name}</h3><div class="flex items-center text-xs opacity-90 gap-1"><i class="fa-solid fa-location-dot text-kansai-red"></i><span class="truncate">${hotel.address}</span></div></div></div><div class="p-4 bg-white"><div class="flex items-center justify-between mb-4 bg-[#FAFAFA] rounded-xl p-3 border border-kansai-light"><div class="flex flex-col"><span class="text-[10px] text-kansai-accent font-bold mb-0.5">入住 CHECK-IN</span><span class="text-base font-bold text-kansai-text font-serif">${hotel.checkIn.date}</span><span class="text-xs text-kansai-accent mt-0.5">${hotel.checkIn.time}</span></div><div class="flex flex-col items-center px-2"><span class="text-[10px] bg-kansai-light text-kansai-red px-2 py-0.5 rounded-full font-bold mb-1">${hotel.duration}</span><div class="w-8 h-[1px] bg-kansai-light"></div></div><div class="flex flex-col text-right"><span class="text-[10px] text-kansai-accent font-bold mb-0.5">退房 CHECK-OUT</span><span class="text-base font-bold text-kansai-text font-serif">${hotel.checkOut.date}</span><span class="text-xs text-kansai-accent mt-0.5">${hotel.checkOut.time}</span></div></div>
+                ${noteHtml}
+                <div class="flex gap-3"><button onclick="window.open('${hotel.mapUrl}', '_blank')" class="flex-1 bg-[#F9F8F6] text-kansai-text border border-kansai-light py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 active:scale-95 transition-transform hover:bg-kansai-light font-serif"><i class="fa-solid fa-map-location-dot"></i> 導航</button><button onclick="openHotelModal(${hotel.id})" class="flex-[2] bg-kansai-red text-white py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 shadow-md shadow-kansai-red/20 active:scale-95 transition-transform font-serif"><i class="fa-solid fa-circle-info"></i> 查看詳情</button></div></div></div>`;
+                list.insertAdjacentHTML('beforeend', html);
+            });
+        }
+
+        // Voucher Modal functions
+        let tempVoucherIcon = 'train';
+        let currentVoucherId = null;
+        let tempVoucherImage = null;
+
+        function openVoucherModal(mode, id = null) {
+            openModal();
+            const isEdit = mode === 'edit';
+            modalTitle.innerText = isEdit ? "編輯憑證" : "新增憑證";
+            modalIcon.className = "fa-solid fa-ticket";
+            modalIconContainer.className = "w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-kansai-red text-2xl mb-3 shadow-sm border border-kansai-light";
+            modalInputArea.classList.add('hidden');
+            let item = { title: '', type: 'train', note: '', img: null };
+            if (isEdit) { currentVoucherId = id; item = voucherData.find(v => v.id === id); }
+            tempVoucherIcon = item.type;
+            tempVoucherImage = item.img;
+            
+            const voucherLabels = { 'train': '交通', 'plane': '機票', 'ticket': '門票', 'file-shield': '其他' };
+            const renderOption = (type) => {
+                const label = voucherLabels[type];
+                const isSelected = type === tempVoucherIcon;
+                const selectedClass = isSelected ? 'border-kansai-red bg-kansai-red/5 text-kansai-red' : 'border-gray-200 text-gray-500 hover:border-gray-300';
+                const iconColor = isSelected ? 'text-kansai-red' : 'text-gray-400';
+                return `<div onclick="selectVoucherIcon(this, '${type}')" class="voucher-type-option flex items-center p-3 rounded-xl border-2 cursor-pointer transition-all ${selectedClass}"><div class="w-8 h-8 rounded-full bg-white flex items-center justify-center mr-3 shadow-sm border border-gray-100"><i class="fa-solid fa-${type} ${iconColor}"></i></div><span class="text-xs font-bold">${label}</span>${isSelected ? '<i class="fa-solid fa-check ml-auto text-kansai-red text-xs"></i>' : ''}</div>`;
+            };
+
+            modalBody.innerHTML = `<div class="space-y-4"><div><label class="text-xs text-gray-400 block mb-1 font-bold">憑證名稱</label><input id="v-title" type="text" value="${item.title}" class="w-full bg-[#FAFAFA] rounded-xl p-3 text-sm focus:outline-none focus:border-kansai-red border-2 border-kansai-light font-bold" placeholder="例如: 車票"></div><div><label class="text-xs text-gray-400 block mb-1 font-bold">備註</label><input id="v-note" type="text" value="${item.note}" class="w-full bg-[#FAFAFA] rounded-xl p-3 text-sm focus:outline-none focus:border-kansai-red border-2 border-kansai-light font-bold" placeholder="例如: QR Code"></div><div><label class="text-xs text-gray-400 block mb-1 font-bold">類型</label><div class="grid grid-cols-2 gap-3 mb-2">${renderOption('train')}${renderOption('plane')}${renderOption('ticket')}${renderOption('file-shield')}</div></div><div><label class="text-xs text-gray-400 block mb-1 font-bold">上傳憑證 (圖片/PDF)</label><label class="w-full h-24 border-2 border-dashed border-kansai-light rounded-2xl bg-[#FAFAFA] flex flex-col items-center justify-center cursor-pointer hover:bg-white transition-colors relative overflow-hidden">${item.img ? `<img src="${item.img}" class="absolute inset-0 w-full h-full object-cover opacity-50">` : ''}<div class="z-10 flex flex-col items-center"><i class="fa-solid fa-cloud-arrow-up text-2xl text-kansai-accent mb-2"></i><span class="text-xs text-kansai-accent font-bold">${item.img ? '點擊更換' : '點擊上傳'}</span></div><input type="file" id="voucher-file" class="hidden" accept="image/*,.pdf" onchange="previewVoucherFile(this)"></label></div></div>`;
+            
+            let btnHtml = `<button onclick="saveVoucher('${mode}')" class="bg-kansai-text text-white px-6 py-4 rounded-2xl font-bold w-full shadow-lg active:scale-95 transition-transform font-serif">${isEdit ? '儲存變更' : '新增憑證'}</button>`;
+            if (isEdit) { modalBody.insertAdjacentHTML('beforeend', `<div class="pt-6 mt-2 text-center border-t border-gray-100"><button onclick="deleteVoucher()" class="text-red-400 text-sm font-bold py-2 hover:text-red-500 transition-colors flex items-center justify-center gap-2 mx-auto w-full active:scale-95 font-serif"><i class="fa-solid fa-trash-can"></i> 刪除此憑證</button></div>`); }
+            modalActions.innerHTML = btnHtml;
+        }
+
+        function selectVoucherIcon(el, type) {
+            tempVoucherIcon = type;
+            document.querySelectorAll('.voucher-type-option').forEach(e => {
+                e.className = "voucher-type-option flex items-center p-3 rounded-xl border-2 cursor-pointer transition-all border-gray-200 text-gray-500 hover:border-gray-300";
+                const icon = e.querySelector('i');
+                if(icon) icon.className = icon.className.replace('text-kansai-red', 'text-gray-400');
+                const check = e.querySelector('.fa-check');
+                if(check) check.remove();
+            });
+            el.className = "voucher-type-option flex items-center p-3 rounded-xl border-2 cursor-pointer transition-all border-kansai-red bg-kansai-red/5 text-kansai-red";
+            const icon = el.querySelector('i');
+            if(icon) { icon.classList.remove('text-gray-400'); icon.classList.add('text-kansai-red'); }
+            if(!el.querySelector('.fa-check')) { el.insertAdjacentHTML('beforeend', '<i class="fa-solid fa-check ml-auto text-kansai-red text-xs"></i>'); }
+        }
+
+        function previewVoucherFile(input) {
+            if (input.files && input.files[0]) {
+                const file = input.files[0];
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    tempVoucherImage = e.target.result;
+                    const parent = input.parentElement;
+                    if(file.type === 'application/pdf'){
+                         const existingImg = parent.querySelector('img');
+                         if(existingImg) existingImg.remove();
+                         parent.querySelector('i').className = "fa-solid fa-file-pdf text-2xl text-red-500 mb-2";
+                         parent.querySelector('span').innerText = file.name;
+                    } else {
+                        const existingImg = parent.querySelector('img');
+                        if(existingImg) existingImg.src = tempVoucherImage;
+                        else {
+                            parent.insertAdjacentHTML('afterbegin', `<img src="${tempVoucherImage}" class="absolute inset-0 w-full h-full object-cover opacity-50">`);
+                            parent.querySelector('span').innerText = '點擊更換';
+                        }
+                    }
+                }
+                reader.readAsDataURL(input.files[0]);
+            }
+        }
+
+        function saveVoucher(mode) {
+            const title = document.getElementById('v-title').value;
+            const note = document.getElementById('v-note').value;
+            if(!title) return;
+            if (mode === 'add') { voucherData.push({ id: Date.now(), title: title, note: note, type: tempVoucherIcon, img: tempVoucherImage }); } 
+            else { const idx = voucherData.findIndex(v => v.id === currentVoucherId); if(idx !== -1) { voucherData[idx] = { ...voucherData[idx], title, note, type: tempVoucherIcon, img: tempVoucherImage }; } }
+            updateSaveStatus('editing');
+            renderVoucherList();
+            saveToLocal();
+            closeModal();
+        }
+
+        function deleteVoucher() {
+            if(confirm('確定要刪除嗎？')) { voucherData = voucherData.filter(v => v.id !== currentVoucherId); updateSaveStatus('editing'); renderVoucherList(); saveToLocal(); closeModal(); }
+        }
+
+        function openHotelModal(id) {
+            const hotel = hotelData.find(h => h.id === id);
+            if (!hotel) return;
+            openModal();
+            modalTitle.innerText = "住宿詳情";
+            modalIcon.className = "fa-solid fa-hotel";
+            modalIconContainer.className = "w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-kansai-red text-2xl mb-3 shadow-sm border border-kansai-light";
+            modalInputArea.classList.add('hidden');
+            const amenitiesHtml = hotel.details.amenities.map(item => `<span class="text-xs bg-white border border-gray-100 px-2 py-1 rounded-md text-gray-500 font-serif">${item}</span>`).join('');
+            const filesHtml = hotel.details.files.map(file => {
+                let icon = 'fa-file'; let colorClass = 'text-gray-400';
+                if (file.type === 'pdf') { icon = 'fa-file-pdf'; colorClass = 'text-red-400'; }
+                else if (file.type === 'img') { icon = 'fa-image'; colorClass = 'text-blue-400'; }
+                else if (file.type === 'link') { icon = 'fa-globe'; colorClass = 'text-green-500'; }
+                const clickAction = file.url ? `window.open('${file.url}', '_blank')` : `showToast('模擬: 開啟 ${file.name}')`;
+                return `<div class="flex items-center p-3 bg-white rounded-xl border border-gray-100 mb-2 cursor-pointer hover:bg-gray-50 active:scale-95 transition-transform" onclick="${clickAction}"><div class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center mr-3"><i class="fa-solid ${icon} ${colorClass}"></i></div><div class="flex-1"><div class="text-xs font-bold text-gray-700 font-serif">${file.name}</div><div class="text-[10px] text-gray-400">${file.type === 'link' ? '點擊前往網頁' : '點擊預覽'}</div></div><i class="fa-solid fa-chevron-right text-gray-300 text-xs"></i></div>`;
+            }).join('');
+            let luggageHtml = '';
+            if (hotel.details.luggage) { luggageHtml = `<div class="bg-[#F6F9F4] p-3 rounded-xl border border-kansai-green/30 mt-3"><div class="text-[10px] text-[#5A7A65] mb-1.5 font-bold flex items-center gap-1"><i class="fa-solid fa-suitcase-rolling"></i> 入住前行李寄存</div><p class="text-xs text-[#5A7A65] leading-relaxed whitespace-pre-line">${hotel.details.luggage}</p></div>`; }
+            modalBody.innerHTML = `<div class="space-y-5"><div><div class="h-32 rounded-xl bg-gray-200 overflow-hidden mb-3 relative"><img src="${hotel.image}" class="w-full h-full object-cover"><div class="absolute inset-0 bg-black/10"></div></div><h4 class="font-bold text-lg text-gray-700 leading-tight font-serif">${hotel.name}</h4><p class="text-xs text-gray-400 mt-1"><i class="fa-solid fa-location-dot mr-1"></i>${hotel.address}</p></div><div class="bg-[#FAFAFA] p-3 rounded-xl border border-kansai-light"><p class="text-xs text-gray-600 leading-relaxed text-justify whitespace-pre-line font-serif">${hotel.details.desc}</p></div><div><div class="bg-white p-3 rounded-xl border border-gray-100"><div class="text-[10px] text-gray-400 mb-1 font-bold">早餐資訊</div><div class="flex items-center gap-2"><i class="fa-solid fa-mug-hot text-kansai-red"></i><span class="text-xs font-bold text-gray-700 font-serif">${hotel.details.breakfast}</span></div></div>${luggageHtml}</div><div><div class="text-xs font-bold text-gray-400 mb-2">設施與服務</div><div class="flex flex-wrap gap-2">${amenitiesHtml}</div></div><div><div class="text-xs font-bold text-gray-400 mb-2">相關文件 / 連結</div>${filesHtml}</div></div>`;
+            modalActions.innerHTML = `<button onclick="closeModal()" class="w-full bg-kansai-text text-white px-6 py-3 rounded-xl font-bold shadow-lg active:scale-95 transition-transform font-serif">關閉</button>`;
+        }
+
+        // Note Modal
+        function openNoteModal(type, id) {
+            openModal();
+            currentNoteType = type;
+            currentNoteId = id;
+            let currentText = '';
+            let title = '';
+            if (type === 'flight') {
+                const flight = flightData.find(f => f.id === id);
+                currentText = flight.note || '';
+                title = flight.type === 'outbound' ? '去程備註' : '回程備註';
+            } else if (type === 'hotel') {
+                const hotel = hotelData.find(h => h.id === id);
+                currentText = hotel.note || '';
+                title = '住宿備註';
+            }
+            modalTitle.innerText = title;
+            modalIcon.className = "fa-solid fa-pen-to-square";
+            modalIconContainer.className = "w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-kansai-red text-2xl mb-3 shadow-sm border border-kansai-light";
+            modalInputArea.classList.add('hidden');
+            modalBody.innerHTML = `<div class="space-y-4"><textarea id="note-edit-area" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-sm focus:outline-none focus:border-kansai-red border-2 border-kansai-light resize-none h-40 font-serif" placeholder="請輸入備註內容...">${currentText}</textarea></div>`;
+            modalActions.innerHTML = `<div class="flex gap-3 w-full"><button onclick="closeModal()" class="flex-1 py-3.5 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors font-serif">取消</button><button onclick="saveNote()" class="flex-1 py-3.5 bg-kansai-red text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform font-serif">儲存</button></div>`;
+            setTimeout(() => document.getElementById('note-edit-area').focus(), 100);
+        }
+
+        function saveNote() {
+            const text = document.getElementById('note-edit-area').value;
+            if (currentNoteType === 'flight') {
+                const idx = flightData.findIndex(f => f.id === currentNoteId);
+                if(idx !== -1) { flightData[idx].note = text; renderFlightList(); }
+            } else if (currentNoteType === 'hotel') {
+                const idx = hotelData.findIndex(h => h.id === currentNoteId);
+                if(idx !== -1) { hotelData[idx].note = text; renderHotelList(); }
+            }
+            saveToLocal();
+            closeModal();
+        }
+
+        function toggleCurrentUser() {
+            const nextUser = currentUser === '釔辰' ? '耀慶' : '釔辰';
+            openPasswordModal(nextUser);
+        }
+
+        function openPasswordModal(targetUser) {
+            openModal();
+            pendingUser = targetUser;
+            modalTitle.innerText = "身分驗證";
+            modalIcon.className = "fa-solid fa-lock";
+            modalInputArea.classList.add('hidden');
+            modalBody.innerHTML = `<div class="text-center"><div class="w-16 h-16 mx-auto rounded-full bg-gray-100 mb-4 overflow-hidden border-2 border-white shadow-md ring-2 ring-kansai-light"><img src="${avatars[targetUser]}" class="w-full h-full object-cover"></div><p class="text-gray-600 text-sm mb-4 font-serif font-bold">切換至 <b>${targetUser}</b><br><span class="font-normal text-gray-400">請輸入 4 位數密碼</span></p><div class="flex justify-center gap-2 mb-3"><input id="switch-pwd" type="tel" maxlength="4" class="w-32 bg-[#FAFAFA] rounded-xl p-3 text-2xl text-center font-serif tracking-widest border-2 border-kansai-light focus:outline-none focus:border-kansai-red focus:ring-0 transition-all text-gray-700 font-bold" placeholder="••••" oninput="checkAutoSubmit(this)"></div><p id="pwd-error" class="text-red-500 text-xs h-4 transition-opacity opacity-0 mt-2 font-bold"><i class="fa-solid fa-circle-exclamation"></i> 密碼錯誤</p></div>`;
+            modalActions.innerHTML = `<button onclick="verifySwitchPassword()" class="bg-kansai-text text-white px-6 py-3.5 rounded-xl font-bold w-full shadow-lg active:scale-95 transition-transform mt-2 font-serif">確認切換</button>`;
+            setTimeout(() => document.getElementById('switch-pwd').focus(), 100);
+        }
+
+        function checkAutoSubmit(input) {
+            const err = document.getElementById('pwd-error');
+            if(err) err.classList.add('opacity-0'); 
+            if(input.value.length === 4) verifySwitchPassword();
+        }
+
+        function verifySwitchPassword() {
+            const input = document.getElementById('switch-pwd');
+            if (input.value === userPasswords[pendingUser]) {
+                performUserSwitch(pendingUser);
+                closeModal();
+                showToast(`歡迎回來，${pendingUser}`);
+            } else {
+                const err = document.getElementById('pwd-error');
+                if(err) err.classList.remove('opacity-0');
+                input.value = '';
+                input.classList.add('shake');
+                setTimeout(() => input.classList.remove('shake'), 300);
+            }
+        }
+
+        function performUserSwitch(user) {
+            currentUser = user;
+            const avatarImg = document.getElementById('header-user-avatar');
+            if (avatarImg) { avatarImg.src = avatars[currentUser]; }
+            
+            // Switch theme if recorded
+            if (userThemes && userThemes[currentUser]) {
+                applyTheme(userThemes[currentUser]);
+            }
+
+            const vjwId = currentUser === '釔辰' ? 1 : 2;
+            switchVjwUser(vjwId);
+            switchLuggageView(currentUser);
+            switchShoppingUser(currentUser);
+            switchTodoAssignee(currentUser);
+        }
+
+        // --- MISSING LUGGAGE FUNCTIONS RESTORED ---
+
+        function switchLuggageView(user) {
+            viewingUser = user;
+            const btn1 = document.getElementById('luggage-view-user-1');
+            const btn2 = document.getElementById('luggage-view-user-2');
+            const activeClass = "flex-1 py-1.5 text-xs font-bold text-gray-700 bg-kansai-bg rounded-lg transition-all font-serif";
+            const inactiveClass = "flex-1 py-1.5 text-xs text-gray-400 hover:bg-gray-50 transition-all font-serif font-bold rounded-lg";
+            if (user === '釔辰') { btn1.className = activeClass; btn2.className = inactiveClass; } 
+            else { btn1.className = inactiveClass; btn2.className = activeClass; }
+            renderLuggageList();
+        }
+
+        function setLuggageSort(type) {
+            luggageSortType = type;
+            ['default', 'storage', 'tag'].forEach(t => {
+                const btn = document.getElementById(`sort-${t}`);
+                if(t === type) btn.className = "text-[10px] px-3 py-1 rounded-lg bg-kansai-light text-kansai-text font-bold transition-all";
+                else btn.className = "text-[10px] px-3 py-1 rounded-lg bg-white border border-gray-200 text-gray-400 transition-all";
+            });
+            renderLuggageList();
+        }
+
+        function renderLuggageList() {
+            const list = document.getElementById('luggage-list');
+            list.innerHTML = '';
+            const items = luggageData[viewingUser] || [];
+            
+            const total = items.length;
+            const completed = items.filter(i => i.completed).length;
+            const progress = total === 0 ? 0 : Math.round((completed / total) * 100);
+            document.getElementById('progress-text').innerText = `${progress}%`;
+            document.getElementById('progress-bar').style.width = `${progress}%`;
+
+            const canEdit = currentUser === viewingUser;
+            document.getElementById('add-luggage-btn').style.display = canEdit ? 'flex' : 'none';
+            
+            const resetBtn = document.getElementById('reset-luggage-btn');
+            if (resetBtn) {
+                resetBtn.style.display = canEdit ? 'flex' : 'none';
+            }
+
+            if (items.length === 0) { list.innerHTML = '<div class="text-center text-gray-300 text-xs py-10 font-serif font-bold">尚無項目</div>'; return; }
+
+            if (luggageSortType === 'default') {
+                items.forEach(item => { list.insertAdjacentHTML('beforeend', createItemHtml(item, canEdit, 'default')); });
+            } else {
+                const groups = {};
+                items.forEach(item => { const key = luggageSortType === 'storage' ? item.storage : item.tag; if(!groups[key]) groups[key] = []; groups[key].push(item); });
+                let keys = Object.keys(groups);
+                if (luggageSortType === 'storage') { const order = ['backpack', 'carryon', 'checked']; keys.sort((a, b) => order.indexOf(a) - order.indexOf(b)); }
+
+                keys.forEach(key => {
+                    let headerIcon = '', headerText = key, groupStyleClass = "border border-gray-100 bg-white", groupInlineStyle = "", headerTextColor = "text-kansai-text", headerTextStyle = ""; 
+                    if (luggageSortType === 'storage') { headerText = getStorageText(key); const iconClass = getStorageIcon(key); headerIcon = `<i class="fa-solid ${iconClass} mr-1 text-kansai-accent"></i>`; } 
+                    else if (luggageSortType === 'tag') { const tagInfo = tagConfig[key] || tagConfig['其他']; headerIcon = `<i class="fa-solid ${tagInfo.icon} mr-1" style="color: ${tagInfo.text}"></i>`; headerTextColor = ""; headerTextStyle = `color: ${tagInfo.text};`; groupStyleClass = "border-2"; groupInlineStyle = `background-color: ${tagInfo.bg}; border-color: ${tagInfo.text}40;`; }
+                    const isGroupComplete = groups[key].length > 0 && groups[key].every(item => item.completed);
+                    const completedBadge = isGroupComplete ? `<i class="fa-solid fa-circle-check text-kansai-green ml-2 text-sm animate-pulse"></i>` : '';
+                    const stateKey = `${viewingUser}-${luggageSortType}-${key}`;
+                    const isCollapsed = collapsedGroups.has(stateKey);
+                    const contentHidden = isCollapsed ? 'hidden' : '';
+                    const iconRotate = isCollapsed ? 'transform: rotate(-90deg);' : '';
+                    const groupHtml = `<div class="mb-4 rounded-xl ${groupStyleClass} overflow-hidden transition-all shadow-sm" style="${groupInlineStyle}"><div class="p-3 flex justify-between items-center cursor-pointer select-none bg-transparent border-b border-gray-50/50" onclick="toggleGroup(this, '${key}')"><h4 class="text-sm font-bold ${headerTextColor} flex items-center gap-2 font-serif" style="${headerTextStyle}">${headerIcon}<span>${headerText}</span><span class="bg-kansai-bg border border-kansai-light px-2 py-0.5 rounded-full text-[10px] text-gray-400 font-bold">${groups[key].length}</span>${completedBadge}</h4><i class="fa-solid fa-chevron-down text-gray-300 transition-transform duration-300" style="${iconRotate}"></i></div><div class="space-y-3.5 p-3 group-content ${contentHidden}"></div></div>`;
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = groupHtml;
+                    const container = tempDiv.querySelector('.group-content');
+                    groups[key].forEach(item => { container.insertAdjacentHTML('beforeend', createItemHtml(item, canEdit, luggageSortType)); });
+                    list.appendChild(tempDiv);
+                });
+            }
+        }
+
+        function createItemHtml(item, canEdit, sortType) {
+            const isChecked = item.completed ? 'checked' : '';
+            const lineThrough = item.completed ? 'line-through opacity-50' : '';
+            const checkboxState = canEdit ? '' : 'disabled';
+            const cursor = canEdit ? 'cursor-pointer' : 'cursor-default';
+            let rightIconHtml = canEdit ? `<button onclick="openLuggageModal('edit', ${item.id})" class="w-8 h-8 rounded-full bg-gray-50 flex items-center justify-center text-gray-400 hover:bg-kansai-light hover:text-kansai-red transition-colors active:scale-95 shrink-0 ml-2"><i class="fa-solid fa-pen text-[10px]"></i></button>` : '';
+            const storageIconClass = getStorageIcon(item.storage);
+            const storageText = getStorageText(item.storage);
+            let storageHtml = sortType !== 'storage' ? `<div class="flex items-center gap-1.5 text-[10px] text-gray-400 mt-1 font-bold"><i class="fa-solid ${storageIconClass} text-kansai-accent"></i><span>${storageText}</span>${item.note ? `<span class="w-1 h-1 rounded-full bg-gray-300"></span><span>${item.note}</span>` : ''}</div>` : (item.note ? `<div class="text-[10px] text-gray-400 mt-1 font-bold">${item.note}</div>` : '');
+            let tagHtml = sortType !== 'tag' ? (() => { const tagInfo = tagConfig[item.tag] || tagConfig['其他']; return `<span class="luggage-tag" style="background-color: ${tagInfo.bg}; color: ${tagInfo.text};"><i class="fa-solid ${tagInfo.icon} text-[8px]"></i> ${item.tag}</span>`; })() : '';
+            return `<div class="app-card p-4 flex items-center justify-between border border-transparent hover:border-kansai-light transition-colors shadow-sm"><div class="flex items-center gap-3 w-full"><label class="custom-checkbox flex items-center gap-3 ${cursor}" onclick="event.stopPropagation()"><input type="checkbox" class="hidden" ${isChecked} ${checkboxState} onchange="toggleItemComplete(${item.id}, this.checked)"><div class="w-5 h-5 border-2 border-gray-300 rounded-md flex items-center justify-center transition-colors flex-shrink-0"><i class="fa-solid fa-check text-white text-[10px] opacity-0"></i></div></label><div class="flex-1 min-w-0"><div class="flex items-center flex-wrap gap-1.5 mb-0.5"><span class="text-sm text-kansai-text font-bold ${lineThrough} truncate max-w-full">${item.name}</span>${tagHtml}</div>${storageHtml}</div>${rightIconHtml}</div></div>`;
+        }
+
+        function toggleGroup(header, key) {
+            const stateKey = `${viewingUser}-${luggageSortType}-${key}`;
+            const content = header.nextElementSibling;
+            const icon = header.querySelector('.fa-chevron-down');
+            if (collapsedGroups.has(stateKey)) { content.classList.remove('hidden'); icon.style.transform = 'rotate(0deg)'; collapsedGroups.delete(stateKey); } 
+            else { content.classList.add('hidden'); icon.style.transform = 'rotate(-90deg)'; collapsedGroups.add(stateKey); }
+        }
+
+        function getStorageIcon(type) {
+            switch(type) {
+                case 'backpack': return 'fa-bag-shopping'; 
+                case 'carryon': return 'fa-briefcase';
+                case 'checked': return 'fa-suitcase-rolling';
+                default: return 'fa-box';
+            }
+        }
+
+        function getStorageText(type) {
+            switch(type) {
+                case 'backpack': return '隨身包';
+                case 'carryon': return '手提';
+                case 'checked': return '托運';
+                default: return type;
+            }
+        }
+        
+        function toggleItemComplete(id, isChecked) {
+            const item = luggageData[viewingUser].find(i => i.id === id);
+            if (item) { item.completed = isChecked; updateSaveStatus('editing'); renderLuggageList(); saveToLocal(); }
+        }
+        
+        let currentEditingLuggageId = null;
+        let tempLuggageStorage = 'backpack';
+        let tempLuggageTag = '重要';
+
+        function openLuggageModal(mode, id = null) {
+            openModal();
+            const isEdit = mode === 'edit';
+            currentEditingLuggageId = isEdit ? id : null;
+            modalTitle.innerText = isEdit ? "編輯物品" : "新增物品";
+            modalIcon.className = "fa-solid fa-suitcase-rolling";
+            
+            let item = { name: '', note: '', storage: 'backpack', tag: '重要' };
+            if (isEdit) {
+                const found = luggageData[viewingUser].find(i => i.id === id);
+                if (found) item = found;
+            }
+            
+            tempLuggageStorage = item.storage;
+            tempLuggageTag = item.tag;
+
+            modalBody.innerHTML = `
+                <div class="space-y-4">
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1 font-bold">物品名稱</label>
+                        <input id="lug-name" type="text" value="${item.name}" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-sm border-2 border-kansai-light focus:outline-none focus:border-kansai-red font-bold" placeholder="例如：行動電源">
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1 font-bold">存放位置</label>
+                        <select id="lug-storage" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-sm border-2 border-kansai-light focus:outline-none focus:border-kansai-red font-bold">
+                            <option value="backpack" ${item.storage === 'backpack' ? 'selected' : ''}>隨身包</option>
+                            <option value="carryon" ${item.storage === 'carryon' ? 'selected' : ''}>手提行李</option>
+                            <option value="checked" ${item.storage === 'checked' ? 'selected' : ''}>托運行李</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1 font-bold">分類標籤</label>
+                        <select id="lug-tag" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-sm border-2 border-kansai-light focus:outline-none focus:border-kansai-red font-bold">
+                            <option value="重要" ${item.tag === '重要' ? 'selected' : ''}>重要</option>
+                            <option value="衣物" ${item.tag === '衣物' ? 'selected' : ''}>衣物</option>
+                            <option value="3C" ${item.tag === '3C' ? 'selected' : ''}>3C</option>
+                            <option value="藥品" ${item.tag === '藥品' ? 'selected' : ''}>藥品</option>
+                            <option value="生活" ${item.tag === '生活' ? 'selected' : ''}>生活</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="text-xs text-gray-400 block mb-1 font-bold">備註</label>
+                        <input id="lug-note" type="text" value="${item.note}" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-sm border-2 border-kansai-light focus:outline-none focus:border-kansai-red font-bold" placeholder="選填">
+                    </div>
+                </div>
+            `;
+            
+            modalActions.innerHTML = `
+                <div class="flex gap-3 w-full">
+                    <button onclick="closeModal()" class="flex-1 py-4 bg-gray-100 text-gray-500 font-bold rounded-2xl font-serif">取消</button>
+                    <button onclick="saveLuggageItem()" class="flex-1 py-4 bg-kansai-text text-white font-bold rounded-2xl shadow-lg active:scale-95 transition-transform font-serif">儲存</button>
+                </div>
+            `;
+            if (isEdit) {
+                modalActions.insertAdjacentHTML('afterend', `
+                    <button onclick="deleteLuggageItem(${id})" class="text-red-400 text-xs font-bold mt-4 w-full text-center hover:text-red-500 transition-colors">
+                        <i class="fa-solid fa-trash-can mr-1"></i> 刪除此項
+                    </button>
+                `);
+            }
+        }
+
+        function saveLuggageItem() {
+            const name = document.getElementById('lug-name').value;
+            if (!name) return;
+            
+            const newItem = {
+                id: currentEditingLuggageId || Date.now(),
+                name: name,
+                storage: document.getElementById('lug-storage').value,
+                tag: document.getElementById('lug-tag').value,
+                note: document.getElementById('lug-note').value,
+                completed: false
+            };
+
+            if (currentEditingLuggageId) {
+                const idx = luggageData[viewingUser].findIndex(i => i.id === currentEditingLuggageId);
+                if (idx !== -1) luggageData[viewingUser][idx] = newItem;
+            } else {
+                luggageData[viewingUser].push(newItem);
+            }
+
+            saveToLocal();
+            renderLuggageList();
+            closeModal();
+            showToast('清單已更新');
+        }
+
+        function deleteLuggageItem(id) {
+            if (confirm('確定要刪除嗎？')) {
+                luggageData[viewingUser] = luggageData[viewingUser].filter(i => i.id !== id);
+                saveToLocal();
+                renderLuggageList();
+                closeModal();
+            }
+        }
+
+        function askResetLuggage() {
+            const hasChecked = luggageData[viewingUser].some(i => i.completed);
+            if (!hasChecked) {
+                showToast('進度已經是 0% 囉！');
+                const btn = document.getElementById('reset-luggage-btn');
+                if(btn) {
+                    btn.classList.add('shake');
+                    setTimeout(() => btn.classList.remove('shake'), 300);
+                }
+                return;
+            }
+
+            openModal();
+            modalTitle.innerText = "重置清單";
+            modalIcon.className = "fa-solid fa-rotate-left";
+            modalIconContainer.className = "w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-gray-400 text-2xl mb-3 shadow-sm border border-gray-200";
+            modalInputArea.classList.add('hidden');
+            
+            modalBody.innerHTML = `
+                <div class="text-center">
+                    <p class="text-gray-700 font-serif font-bold text-sm mb-2">
+                        確定要取消<span class="text-kansai-red mx-1 border-b-2 border-kansai-red/20">${viewingUser}</span>的所有勾選嗎？
+                    </p>
+                    <p class="text-xs text-gray-400 leading-relaxed bg-gray-50 p-2 rounded-lg border border-gray-100">
+                        <i class="fa-solid fa-triangle-exclamation mr-1 text-orange-400"></i>
+                        這將會把目前的準備進度歸零，且無法復原。
+                    </p>
+                </div>
+            `;
+            
+            modalActions.innerHTML = `
+                <div class="flex gap-3 w-full">
+                    <button onclick="closeModal()" class="flex-1 py-3.5 rounded-xl bg-gray-100 text-gray-500 font-bold hover:bg-gray-200 transition-colors font-serif text-xs">保持原狀</button>
+                    <button onclick="confirmResetLuggage()" class="flex-1 py-3.5 rounded-xl bg-red-50 text-red-500 border-2 border-red-100 font-bold hover:bg-red-100 transition-colors font-serif shadow-sm text-xs flex items-center justify-center gap-1">
+                        <i class="fa-solid fa-eraser"></i> 確認重置
+                    </button>
+                </div>
+            `;
+        }
+
+        function confirmResetLuggage() {
+            if (luggageData[viewingUser]) {
+                luggageData[viewingUser].forEach(item => item.completed = false);
+                saveToLocal();
+                renderLuggageList();
+                updateSaveStatus('saved');
+                closeModal();
+                showToast('已重置所有勾選狀態');
+            }
+        }
+
+        // --- MISSING UTILITIES RESTORED ---
+
+        function openModal() {
+            modal.classList.add('active');
+            modalBody.innerHTML = "";
+            modalActions.innerHTML = "";
+            modalLoading.classList.add('hidden');
+            audioWave.classList.add('hidden');
+            modalIcon.className = "fa-solid fa-wand-magic-sparkles"; 
+        }
+
+        function closeModal() {
+            modal.classList.remove('active');
+        }
+
+        function showToast(msg) {
+            const toast = document.getElementById('toast');
+            document.getElementById('toast-msg').innerText = msg;
+            toast.classList.add('active');
+            setTimeout(() => toast.classList.remove('active'), 2500);
+        }
+
+        function updateCountdown() {
+            const targetDate = new Date('2026-04-09T00:00:00');
+            const now = new Date();
+            const diff = targetDate - now;
+            if (diff > 0) {
+                const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                const dEl = document.getElementById('cd-days');
+                if(dEl) dEl.innerText = days;
+            }
+        }
+
+        async function fetchExchangeRate() {
+            try {
+                const response = await fetch('https://api.exchangerate-api.com/v4/latest/JPY');
+                if (!response.ok) throw new Error('Err');
+                const data = await response.json();
+                if (data && data.rates && data.rates.TWD) {
+                    currentRate = data.rates.TWD;
+                    document.getElementById('rate-display').innerText = `匯率: ${currentRate.toFixed(3)}`;
+                    calcRate();
+                }
+            } catch (error) {
+                document.getElementById('rate-display').innerText = `匯率: ${currentRate} (預設)`;
+            }
+        }
+        
+        function calcRate() {
+            const jpy = document.getElementById('jpy-input').value;
+            document.getElementById('twd-output').value = Math.round(jpy * currentRate);
+        }
+        function calcReverse() {
+            const twd = document.getElementById('twd-output').value;
+            document.getElementById('jpy-input').value = Math.round(twd / currentRate);
+        }
+
+        function switchVjwUser(id) {
+            const btn1 = document.getElementById('vjw-btn-1');
+            const btn2 = document.getElementById('vjw-btn-2');
+            const activeClass = "text-[10px] px-3 py-1 rounded transition-all duration-200 bg-kansai-red text-white font-bold shadow-sm";
+            const inactiveClass = "text-[10px] px-3 py-1 rounded transition-all duration-200 bg-gray-100 text-gray-500 hover:bg-gray-200 font-bold";
+            if(id === 1) { btn1.className = activeClass; btn2.className = inactiveClass; } 
+            else { btn2.className = activeClass; btn1.className = inactiveClass; }
+        }
+        
+        function updateSaveStatus(status) {
+            const badge = document.getElementById('save-status-badge');
+            if (!badge) return;
+            if (status === 'editing') {
+                badge.className = "text-[10px] bg-gray-100 text-gray-500 px-3 py-1 rounded-full flex items-center gap-1.5 transition-all duration-300 font-bold";
+                badge.innerHTML = '<i class="fa-solid fa-pen-nib animate-pulse"></i> 編輯中...';
+                if (saveTimeout) clearTimeout(saveTimeout);
+                saveTimeout = setTimeout(() => { updateSaveStatus('saved'); }, 800);
+            } else if (status === 'saved') {
+                badge.className = "text-[10px] border-2 border-kansai-green text-kansai-green px-3 py-1 rounded-full flex items-center gap-1.5 transition-all duration-300 bg-white font-bold hidden";
+                badge.innerHTML = '<i class="fa-solid fa-check-circle"></i> 已儲存';
+            }
+        }
+
+        // --- Other Modal Functions (Restored) ---
+        function openTranslatorModal() {
+            openModal();
+            modalTitle.innerText = "簡單日語"; 
+            modalIcon.className = "fa-solid fa-language";
+            modalIconContainer.className = "w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-kansai-green text-2xl mb-3 shadow-sm border border-kansai-light";
+            modalInputArea.classList.add('hidden');
+            renderPhraseList();
+            modalActions.innerHTML = `<div class="flex gap-3 w-full"><button onclick="closeModal()" class="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors font-serif">關閉</button><button onclick="openAddPhrase()" class="w-12 h-12 flex items-center justify-center bg-kansai-green text-white rounded-full shadow-lg active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></button></div>`;
+        }
+
+        function renderPhraseList() {
+            let listHtml = '<div class="space-y-3 max-h-[60vh] overflow-y-auto px-1 pb-4 hide-scrollbar">';
+            if (phrasesData.length === 0) { listHtml += `<div class="text-center text-gray-300 py-8 text-sm font-serif">尚無資料，點擊下方新增</div>`; } 
+            else {
+                phrasesData.forEach((item) => {
+                    listHtml += `<div id="card-${item.id}" class="bg-white p-3 rounded-2xl shadow-sm border border-gray-100 relative transition-all duration-200 cursor-pointer hover:shadow-md group select-none hover:border-kansai-green" onclick="revealPhrase(${item.id})"><button onclick="deletePhrase(event, ${item.id})" class="absolute top-2 right-2 text-gray-200 hover:text-red-400 p-2 transition-colors z-20 rounded-full hover:bg-gray-50 flex items-center justify-center w-8 h-8"><i class="fa-solid fa-trash-can text-xs pointer-events-none"></i></button><div id="front-${item.id}" class="flex items-center justify-center py-2 min-h-[40px]"><div class="text-base font-bold text-gray-600 tracking-widest font-serif">${item.ch}</div><div class="absolute bottom-1 right-2 text-[8px] text-gray-300 opacity-0 group-hover:opacity-100 transition-opacity"><i class="fa-solid fa-hand-pointer"></i></div></div><div id="back-${item.id}" class="hidden"><div class="flex flex-col items-center text-center pt-2"><div class="text-[10px] text-gray-400 mb-1 font-bold tracking-wide opacity-50">${item.ch}</div><div class="text-xl font-bold text-kansai-green leading-tight mb-1 font-serif">${item.jp}</div><div class="text-[10px] text-gray-500 font-mono bg-[#F9F8F6] px-2 py-0.5 rounded-full mb-2">${item.ro}</div><div class="w-full border-t border-dashed border-gray-200 pt-2 mt-1"><button onclick="event.stopPropagation(); playTTS('${item.jp}')" class="flex items-center justify-center gap-1 text-kansai-green text-xs font-bold w-full hover:bg-green-50 py-1 rounded transition-colors font-serif"><i class="fa-solid fa-volume-high"></i> 播放</button></div></div></div></div>`;
+                });
+            }
+            listHtml += '</div>';
+            modalBody.innerHTML = listHtml;
+        }
+
+        function revealPhrase(id) {
+            phrasesData.forEach(p => { const card = document.getElementById(`card-${p.id}`), f = document.getElementById(`front-${p.id}`), b = document.getElementById(`back-${p.id}`); if(card && f && b) { f.classList.remove('hidden'); b.classList.add('hidden'); card.classList.remove('border-kansai-green', 'ring-2', 'ring-kansai-green/20', 'bg-[#F6F9F4]'); card.classList.add('border-gray-100', 'bg-white'); } });
+            const card = document.getElementById(`card-${id}`), f = document.getElementById(`front-${id}`), b = document.getElementById(`back-${id}`);
+            if(card && f && b) { f.classList.add('hidden'); b.classList.remove('hidden'); card.classList.remove('border-gray-100', 'bg-white'); card.classList.add('border-kansai-green', 'ring-2', 'ring-kansai-green/20', 'bg-[#F6F9F4]'); }
+        }
+
+        function openAddPhrase() {
+            modalTitle.innerText = "新增日語";
+            modalBody.innerHTML = `<div class="space-y-4"><div><label class="text-xs text-gray-400 block mb-1">中文</label><div class="flex gap-2"><input id="new-ph-ch" type="text" class="w-full bg-[#FAFAFA] rounded-xl p-3 text-sm focus:outline-none focus:border-kansai-green border border-kansai-light" placeholder="例如: 謝謝"><button onclick="autoTranslatePhrase()" class="bg-kansai-green text-white px-3 rounded-xl text-xs font-bold shrink-0 shadow-sm active:scale-95 transition-transform flex items-center gap-1 font-serif"><i class="fa-solid fa-wand-magic-sparkles"></i> AI</button></div></div><div><label class="text-xs text-gray-400 block mb-1">日文</label><input id="new-ph-jp" type="text" class="w-full bg-[#FAFAFA] rounded-xl p-3 text-sm focus:outline-none focus:border-kansai-green border border-kansai-light" placeholder="例如: ありがとう"></div><div><label class="text-xs text-gray-400 block mb-1">羅馬拼音</label><input id="new-ph-ro" type="text" class="w-full bg-[#FAFAFA] rounded-xl p-3 text-sm focus:outline-none focus:border-kansai-green border border-kansai-light" placeholder="例如: Arigatou"></div></div>`;
+            modalActions.innerHTML = `<div class="flex gap-3 w-full"><button onclick="openTranslatorModal()" class="flex-1 py-3 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors font-serif">取消</button><button onclick="saveNewPhrase()" class="flex-1 py-3 bg-kansai-green text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform font-serif">儲存</button></div>`;
+        }
+
+        async function autoTranslatePhrase() {
+            const chInput = document.getElementById('new-ph-ch'), jpInput = document.getElementById('new-ph-jp'), roInput = document.getElementById('new-ph-ro'), text = chInput.value;
+            if(!text) return;
+            jpInput.placeholder = "翻譯中..."; roInput.placeholder = "翻譯中...";
+            if(!apiKey) { setTimeout(() => { jpInput.value = "自動翻訳 (Demo)"; roInput.value = "Jidou Honyaku"; }, 800); return; }
+            const prompt = `Translate this Chinese "${text}" to natural Japanese. JSON response: {"jp": "japanese_text", "ro": "romaji"}`;
+            try {
+                const res = await callGemini(prompt, true); const jsonStr = res.replace(/```json|```/g, '').trim(); const data = JSON.parse(jsonStr);
+                jpInput.value = data.jp; roInput.value = data.ro;
+            } catch(e) { console.error(e); jpInput.placeholder = "翻譯失敗"; roInput.placeholder = "翻譯失敗"; }
+        }
+
+        function saveNewPhrase() {
+            const ch = document.getElementById('new-ph-ch').value, jp = document.getElementById('new-ph-jp').value, ro = document.getElementById('new-ph-ro').value;
+            if (ch && jp) { phrasesData.push({ id: Date.now(), ch, jp, ro }); saveToLocal(); openTranslatorModal(); }
+        }
+
+        function deletePhrase(e, id) {
+            if (e) e.stopPropagation();
+            if(confirm('確定要刪除嗎？')) { phrasesData = phrasesData.filter(p => p.id !== id); saveToLocal(); renderPhraseList(); }
+        }
+        
+        function openNotesModal() {
+            openModal();
+            modalTitle.innerText = "注意事項"; 
+            modalIcon.className = "fa-solid fa-clipboard-list";
+            modalIconContainer.className = "w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-kansai-red text-2xl mb-3 shadow-sm border border-kansai-light";
+            modalInputArea.classList.add('hidden');
+            renderNotesList();
+            modalActions.innerHTML = `<div class="flex gap-3 w-full"><button onclick="closeModal()" class="flex-1 py-3.5 text-gray-400 text-sm font-bold hover:bg-gray-100 rounded-xl transition-colors font-serif">關閉</button><button onclick="openAddNote()" class="w-12 h-12 flex items-center justify-center bg-kansai-red text-white rounded-full shadow-lg active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></button></div>`;
+        }
+
+        function renderNotesList() {
+            let listHtml = '<div class="space-y-4 max-h-[60vh] overflow-y-auto px-1 pb-4 hide-scrollbar">';
+            if (notesData.length === 0) { listHtml += `<div class="text-center text-gray-300 py-8 text-sm font-serif font-bold">尚無資料，點擊下方新增</div>`; } 
+            else {
+                notesData.forEach((item) => {
+                    listHtml += `<div id="card-${item.id}" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative transition-all duration-200 cursor-pointer hover:shadow-md group select-none hover:border-kansai-red" onclick="toggleNote(${item.id})"><button onclick="deleteNote(event, ${item.id})" class="absolute top-3 right-3 text-gray-200 hover:text-red-400 p-2 transition-colors z-20 rounded-full hover:bg-gray-50 flex items-center justify-center w-8 h-8"><i class="fa-solid fa-trash-can text-xs pointer-events-none"></i></button><div class="flex flex-col items-start"><div class="text-base font-bold text-gray-700 tracking-wide mb-1 flex items-center gap-2 font-serif"><i class="fa-solid fa-circle-exclamation text-kansai-red text-xs"></i>${item.title}</div><div id="content-${item.id}" class="text-sm text-gray-600 leading-relaxed hidden w-full border-t-2 border-dashed border-gray-100 pt-3 mt-2 whitespace-pre-line font-bold">${item.content}</div><div id="hint-${item.id}" class="text-[10px] text-gray-300 mt-1 font-bold">點擊展開詳情</div></div></div>`;
+                });
+            }
+            listHtml += '</div>';
+            modalBody.innerHTML = listHtml;
+        }
+
+        function toggleNote(id) {
+            const content = document.getElementById(`content-${id}`);
+            const hint = document.getElementById(`hint-${id}`);
+            const card = document.getElementById(`card-${id}`);
+            if(content) {
+                const isHidden = content.classList.contains('hidden');
+                notesData.forEach(n => {
+                    const c = document.getElementById(`content-${n.id}`);
+                    const h = document.getElementById(`hint-${n.id}`);
+                    const cd = document.getElementById(`card-${n.id}`);
+                    if(c && n.id !== id) {
+                        c.classList.add('hidden');
+                        if(h) h.classList.remove('hidden');
+                        if(cd) { cd.classList.remove('border-kansai-red', 'ring-2', 'ring-kansai-red/20', 'bg-[#FFF5F5]'); cd.classList.add('border-gray-100', 'bg-white'); }
+                    }
+                });
+                if (isHidden) { content.classList.remove('hidden'); if(hint) hint.classList.add('hidden'); if(card) { card.classList.remove('border-gray-100', 'bg-white'); card.classList.add('border-kansai-red', 'ring-2', 'ring-kansai-red/20', 'bg-[#FFF5F5]'); } } 
+                else { content.classList.add('hidden'); if(hint) hint.classList.remove('hidden'); if(card) { card.classList.remove('border-kansai-red', 'ring-2', 'ring-kansai-red/20', 'bg-[#FFF5F5]'); card.classList.add('border-gray-100', 'bg-white'); } }
+            }
+        }
+
+        function openAddNote() {
+            modalTitle.innerText = "新增事項";
+            modalBody.innerHTML = `<div class="space-y-4"><div><label class="text-xs text-gray-400 block mb-1 font-bold">標題</label><input id="new-note-title" type="text" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-base border-2 border-kansai-light focus:outline-none focus:border-kansai-red font-bold" placeholder="例如: 飯店Wifi"></div><div><label class="text-xs text-gray-400 block mb-1 font-bold">內容</label><textarea id="new-note-content" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-sm focus:outline-none focus:border-kansai-red border-2 border-kansai-light resize-none h-32 font-bold" placeholder="請輸入詳細內容..."></textarea></div></div>`;
+            modalActions.innerHTML = `<div class="flex gap-3 w-full"><button onclick="openNotesModal()" class="flex-1 py-3.5 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors font-serif">取消</button><button onclick="saveNewNote()" class="flex-1 py-3.5 bg-kansai-red text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform font-serif">儲存</button></div>`;
+        }
+
+        function saveNewNote() {
+            const title = document.getElementById('new-note-title').value;
+            const content = document.getElementById('new-note-content').value;
+            if (title) { notesData.push({ id: Date.now(), title, content }); saveToLocal(); openNotesModal(); }
+        }
+
+        function deleteNote(e, id) {
+            if (e) e.stopPropagation();
+            if(confirm('確定要刪除嗎？')) { notesData = notesData.filter(p => p.id !== id); saveToLocal(); renderNotesList(); }
+        }
+
+        function openEmergencyModal() {
+            openModal();
+            modalTitle.innerText = "緊急聯絡"; 
+            modalIcon.className = "fa-solid fa-bell text-red-500";
+            modalIconContainer.className = "w-14 h-14 rounded-2xl bg-white flex items-center justify-center text-red-100 text-2xl mb-3 shadow-sm border border-red-100";
+            modalInputArea.classList.add('hidden');
+            renderEmergencyList();
+            modalActions.innerHTML = `<div class="flex gap-3 w-full"><button onclick="closeModal()" class="flex-1 py-3.5 text-gray-400 text-sm font-bold hover:bg-gray-100 rounded-xl transition-colors font-serif">關閉</button><button onclick="openAddEmergency()" class="w-12 h-12 flex items-center justify-center bg-red-400 text-white rounded-full shadow-lg active:scale-95 transition-transform"><i class="fa-solid fa-plus"></i></button></div>`;
+        }
+
+        function renderEmergencyList() {
+            let listHtml = '<div class="space-y-4 max-h-[60vh] overflow-y-auto px-1 pb-4 hide-scrollbar">';
+            if (emergencyData.length === 0) { listHtml += `<div class="text-center text-gray-300 py-8 text-sm font-serif font-bold">尚無資料，點擊下方新增</div>`; } 
+            else {
+                emergencyData.forEach((item) => {
+                    listHtml += `<div id="em-card-${item.id}" class="bg-white p-4 rounded-2xl shadow-sm border border-gray-100 relative transition-all duration-200 cursor-pointer hover:shadow-md group select-none hover:border-red-300"><button onclick="deleteEmergency(event, ${item.id})" class="absolute top-3 right-3 text-gray-200 hover:text-red-400 p-2 transition-colors z-20 rounded-full hover:bg-gray-50 flex items-center justify-center w-8 h-8"><i class="fa-solid fa-trash-can text-xs pointer-events-none"></i></button><div class="flex flex-col items-start"><div class="text-base font-bold text-gray-700 tracking-wide mb-1 flex items-center gap-2 font-serif"><i class="fa-solid fa-phone-volume text-red-400 text-xs"></i>${item.title}</div><div id="em-content-${item.id}" class="text-sm text-gray-600 leading-relaxed w-full border-t-2 border-dashed border-gray-100 pt-3 mt-2 whitespace-pre-line font-mono font-bold">${item.content}</div></div></div>`;
+                });
+            }
+            listHtml += '</div>';
+            modalBody.innerHTML = listHtml;
+        }
+
+        function openAddEmergency() {
+            modalTitle.innerText = "新增聯絡人";
+            modalBody.innerHTML = `<div class="space-y-4"><div><label class="text-xs text-gray-400 block mb-1 font-bold">標題</label><input id="new-em-title" type="text" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-base focus:outline-none focus:border-red-300 border-2 border-kansai-light font-bold" placeholder="例如: 領事館"></div><div><label class="text-xs text-gray-400 block mb-1 font-bold">內容 (電話/地址)</label><textarea id="new-em-content" class="w-full bg-[#FAFAFA] rounded-xl p-4 text-sm focus:outline-none focus:border-red-300 border-2 border-kansai-light resize-none h-32 font-bold" placeholder="請輸入電話或地址..."></textarea></div></div>`;
+            modalActions.innerHTML = `<div class="flex gap-3 w-full"><button onclick="openEmergencyModal()" class="flex-1 py-3.5 bg-gray-100 text-gray-500 font-bold rounded-xl hover:bg-gray-200 transition-colors font-serif">取消</button><button onclick="saveNewEmergency()" class="flex-1 py-3.5 bg-red-400 text-white font-bold rounded-xl shadow-lg active:scale-95 transition-transform font-serif">儲存</button></div>`;
+        }
+
+        function saveNewEmergency() {
+            const title = document.getElementById('new-em-title').value;
+            const content = document.getElementById('new-em-content').value;
+            if (title) { emergencyData.push({ id: Date.now(), title, content }); saveToLocal(); openEmergencyModal(); }
+        }
+
+        function deleteEmergency(e, id) {
+            if (e) e.stopPropagation();
+            if(confirm('確定要刪除嗎？')) { emergencyData = emergencyData.filter(p => p.id !== id); saveToLocal(); renderEmergencyList(); }
+        }
+
+        // Init
+        loadFromLocal();
+        fetchExchangeRate();
+        switchLuggageView('釔辰');
+        renderScheduleDates(); 
+        setInterval(updateCountdown, 1000);
+        updateCountdown();
+    </script>
+</body>
+</html>
